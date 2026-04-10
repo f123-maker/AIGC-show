@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图像超分与影像修复 - 范建斌 | ComfyUI AIGC工程师</title>
+    <style>
+        /* ============================================================
+           核心一致性样式：保留深色科技视觉，优化微交互
+           ============================================================ */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Inter", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif; }
+
+        body {
+            background-color: #0f172a; 
+            color: #f8fafc;
+            padding: 32px 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .resume-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .resume-card h1 {
+            font-size: 32px;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+            font-weight: 800;
+        }
+
+        .base-info { font-size: 16px; color: #94a3b8; margin-bottom: 16px; letter-spacing: 0.5px; }
+        .resume-card hr { border: none; border-top: 1px solid rgba(255, 255, 255, 0.1); margin: 20px 0; }
+
+        .intro-list { margin-left: 20px; margin-bottom: 24px; color: #cbd5e1; font-size: 15px; }
+        .intro-list li { margin-bottom: 8px; }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 12px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .main-container {
+            background: rgba(30, 41, 59, 0.3);
+            border-radius: 24px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-left { display: flex; align-items: center; gap: 20px; }
+        .page-title { font-size: 28px; font-weight: 700; color: #ffffff; }
+
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(255, 255, 255, 0.05); color: #60a5fa;
+            padding: 10px 24px; border-radius: 50px; text-decoration: none;
+            font-weight: 600; border: 1px solid rgba(96, 165, 250, 0.3); transition: 0.3s;
+        }
+        .back-btn:hover { background: #2563eb; color: #ffffff; transform: translateX(-5px); }
+
+        .section-title {
+            font-size: 22px; font-weight: 700; color: #ffffff;
+            margin-bottom: 24px; padding-left: 15px; border-left: 4px solid #60a5fa;
+        }
+
+        .workflow-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 24px; margin-bottom: 48px; }
+        .workflow-card { background: rgba(15, 23, 42, 0.4); border-radius: 20px; padding: 24px; border: 1px solid rgba(255, 255, 255, 0.08); transition: 0.3s; }
+        .workflow-card:hover { border-color: rgba(96, 165, 250, 0.5); }
+
+        .img-static-area {
+            width: 100%; background: #000;
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
+            overflow: hidden; cursor: zoom-in; position: relative;
+        }
+        .img-static-area img { width: 100%; display: block; transition: 0.5s; }
+        .img-static-area:hover img { transform: scale(1.02); }
+        
+        .example-images { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; background: rgba(255, 255, 255, 0.05); }
+        .example-img-wrapper { position: relative; width: 100%; aspect-ratio: 1; background: #000; overflow: hidden; }
+        .example-img-wrapper img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
+
+        .example-label {
+            position: absolute; top: 6px; left: 6px; z-index: 20;
+            background: rgba(15, 23, 42, 0.85); color: #60a5fa;
+            padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700;
+            border: 1px solid rgba(96, 165, 250, 0.2); pointer-events: none;
+        }
+
+        .workflow-desc { margin-top: 16px; color: #94a3b8; font-size: 14px; line-height: 1.6; }
+        .tech-tag { display: inline-block; padding: 2px 8px; background: rgba(96, 165, 250, 0.1); color: #60a5fa; border-radius: 4px; font-size: 12px; margin-right: 6px; margin-top: 8px; }
+
+        .examples-grid { display: grid; grid-template-columns: 1fr; gap: 32px; }
+        @media (min-width: 1200px) { .examples-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        .example-card { background: rgba(30, 41, 59, 0.4); border-radius: 20px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.05); transition: 0.4s; }
+        .example-card:hover { transform: translateY(-8px); border-color: rgba(96, 165, 250, 0.3); }
+
+        .example-info { padding: 24px; }
+        .example-type { font-size: 18px; font-weight: 700; color: #ffffff; margin-bottom: 8px; }
+        .example-desc { font-size: 14px; color: #94a3b8; line-height: 1.6; }
+
+        .footer { text-align: center; padding: 48px; color: #64748b; font-size: 14px; }
+
+        .img-preview-modal {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(15px);
+            display: none; align-items: center; justify-content: center; z-index: 9999; cursor: zoom-out;
+        }
+        .img-preview-modal.active { display: flex; }
+        .img-preview-img { max-width: 95%; max-height: 95%; border-radius: 8px; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+
+        @media (max-width: 600px) { .workflow-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="resume-card">
+        <h1>范建斌 | ComfyUI AIGC工程师</h1>
+        <p class="base-info">28岁 | 广州 | 计算机技术硕士 | 专注影像修复与大规模生产流</p>
+        <hr>
+        <ul class="intro-list">
+            <li><strong>超高分辨率适配：</strong> 研发基于 TTP 瓦片分块技术的工作流，突破 VRAM 限制实现工业级 8K 无损超分；</li>
+            <li><strong>深度语义重构：</strong> 精通 FireRed 去噪与 Flux-Klein 细节注入双引擎，解决老旧影像严重破损的还原难题；</li>
+            <li><strong>工程化交付：</strong> 擅长 DiT (Diffusion Transformer) 架构模型调优，具备复杂质感（皮肤毛孔、丝绸纹理）的精准还原能力。</li>
+        </ul>
+        <div class="contact-grid">
+            <div>📞 电话: 15770610878</div>
+            <div>📧 邮箱: 1446484621@qq.com</div>
+            <div>🎓 硕士: 广东技术师范大学 (2021.9-2024.7)</div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="page-header">
+            <div class="header-left">
+                <a href="index.html" class="back-btn">← 返回首页</a>
+                <h2 class="page-title">影像修复与工业超分 / Upscaling & Restoration</h2>
+            </div>
+        </div>
+
+        <div class="workflow-section">
+            <h3 class="section-title">ComfyUI 生产级工作流架构</h3>
+            <div class="workflow-grid">
+                <div class="workflow-card">
+                    <h4 style="color: #60a5fa; margin-bottom: 12px; font-size: 18px;">方案 A：DiT 架构超清 8K 瓦片工作流</h4>
+                    <div class="img-static-area" onclick="openPreview('workflow_a.jpg')">
+                        <img src="workflow_a.jpg" alt="SeedVR 8K Workflow" onerror="this.src='https://placehold.co/800x450/1e293b/60a5fa?text=SeedVR2.5+Workflow'">
+                    </div>
+                    <div class="workflow-desc">
+                        基于 <strong>SeedVR 2.5 (DiT)</strong> 核心引擎，集成 <strong>TTP 切片重组技术</strong>。通过 128px 冗余重叠算法消除分块接缝，支持在消费级显卡上完成影视级 8K 影像的细节纹理重构。
+                        <br>
+                        <span class="tech-tag">Diffusion Transformer</span><span class="tech-tag">Tile Processing</span><span class="tech-tag">VRAM Optimization</span>
+                    </div>
+                </div>
+
+                <div class="workflow-card">
+                    <h4 style="color: #a78bfa; margin-bottom: 12px; font-size: 18px;">方案 B：FireRed + Flux 双阶语义修复流</h4>
+                    <div class="img-static-area" onclick="openPreview('workflow_b.jpg')">
+                        <img src="workflow_b.jpg" alt="Old Photo Restoration Workflow" onerror="this.src='https://placehold.co/800x450/1e293b/a78bfa?text=FireRed+Flux+Workflow'">
+                    </div>
+                    <div class="workflow-desc">
+                        针对老照片破损开发的双阶段修复架构。由 <strong>FireRed 1.1</strong> 负责基准去噪与伪影消除，<strong>Flux.2 Klein</strong> 通过潜空间参考（Reference Latent）注入高频语义细节，实现“从模糊到清晰”的智能化跃迁。
+                        <br>
+                        <span class="tech-tag">Semantic Restoration</span><span class="tech-tag">Multi-Stage Pipeline</span><span class="tech-tag">Lightning LoRA</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="examples-section">
+            <h3 class="section-title">超分效果对比 (原图 / 修复结果 / 细节动态对比)</h3>
+            <div class="examples-grid" id="examplesGrid">
+                <script>
+                    const basePath = 'workflow/upscale/';
+                    const examples = [
+                        { title: "皮肤毛孔级细节增强", desc: "调用 SeedVR 7B 高精度模型，针对人像皮肤进行非破坏性修复，生成真实的微小毛孔与发丝质感。", prefix: "demo1" },
+                        { title: "极限 JPEG 压缩伪影消除", desc: "利用 FireRed 专项去噪算子，精准识别并剥离 80 年代老照片中的网格状压缩痕迹。", prefix: "demo2" },
+                        { title: "二次元边缘锯齿重绘", desc: "配合 FlashVSR 1.1 算法，针对动漫素材线条进行矢量化重构，解决放大后的溢色与边缘模糊。", prefix: "demo3" },
+                        { title: "影视素材全链路无损超分", desc: "采用 TTP 瓦片技术处理 4K+ 原片，保持全图光影一致性的前提下大幅度提升清晰度。", prefix: "demo4" }
+                    ];
+
+                    examples.forEach(ex => {
+                        const low = `${basePath}${ex.prefix}_low.png`;
+                        const high = `${basePath}${ex.prefix}_high.png`;
+                        const gif = `${basePath}${ex.prefix}_gif.gif`;
+
+                        document.write(`
+                            <div class="example-card">
+                                <div class="example-images">
+                                    <div class="example-img-wrapper"><span class="example-label">Low-Res</span><img src="${low}" onclick="openPreview('${low}')" onerror="this.src='https://placehold.co/300x300/0f172a/475569?text=Low'"></div>
+                                    <div class="example-img-wrapper"><span class="example-label">Upscaled</span><img src="${high}" onclick="openPreview('${high}')" onerror="this.src='https://placehold.co/300x300/0f172a/60a5fa?text=High'"></div>
+                                    <div class="example-img-wrapper"><span class="example-label">Details</span><img src="${gif}" onclick="openPreview('${gif}')" onerror="this.src='https://placehold.co/300x300/0f172a/a78bfa?text=Compare'"></div>
+                                </div>
+                                <div class="example-info">
+                                    <div class="example-type">${ex.title}</div>
+                                    <div class="example-desc">${ex.desc}</div>
+                                </div>
+                            </div>
+                        `);
+                    });
+                </script>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">© 2026 范建斌 | 基于 ComfyUI 的影像工业化解决方案 | 广州</footer>
+
+    <div class="img-preview-modal" id="modal" onclick="this.classList.remove('active')">
+        <img src="" id="modalImg" class="img-preview-img">
+    </div>
+
+    <script>
+        function openPreview(url) {
+            const modal = document.getElementById('modal');
+            const modalImg = document.getElementById('modalImg');
+            modalImg.src = url;
+            modal.classList.add('active');
+        }
+    </script>
+</body>
+</html>

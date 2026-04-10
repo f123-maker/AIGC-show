@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分镜图生成 - 范建斌 | ComfyUI AIGC工程师</title>
+    <style>
+        /* ============================================================
+           核心一致性样式：完全保留原版视觉风格
+           ============================================================ */
+        :root {
+            --primary-accent: #a78bfa;
+            --secondary-accent: #60a5fa;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --border-glow: rgba(167, 139, 250, 0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Inter", "PingFang SC", system-ui, sans-serif; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #f8fafc;
+            padding: 40px 20px;
+            max-width: 1400px; 
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .resume-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 32px;
+            margin-bottom: 40px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        .resume-card h1 {
+            font-size: 32px;
+            background: linear-gradient(90deg, var(--secondary-accent), var(--primary-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+            font-weight: 800;
+        }
+
+        .main-container {
+            background: rgba(30, 41, 59, 0.3);
+            border-radius: 28px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-top: 40px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title::before {
+            content: "";
+            width: 4px;
+            height: 20px;
+            background: var(--primary-accent);
+            border-radius: 10px;
+        }
+
+        .workflow-card {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px solid var(--border-glow);
+            margin-bottom: 32px;
+        }
+
+        /* 统一图片展示区域 */
+        .img-display-area {
+            width: 100%; border-radius: 12px; background: #000;
+            overflow: hidden; border: 1px solid rgba(255,255,255,0.05); cursor: zoom-in;
+        }
+        .img-display-area img { width: 100%; height: auto; display: block; }
+
+        .story-grid { display: grid; gap: 48px; margin-bottom: 60px; }
+        
+        .story-item {
+            background: rgba(30, 41, 59, 0.4);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+            transition: 0.3s;
+        }
+        .story-item:hover { border-color: var(--border-glow); transform: translateY(-5px); }
+
+        /* 分镜序列网格 */
+        .shot-sequence { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: rgba(255, 255, 255, 0.05); }
+        .shot-sequence.grid-6 { grid-template-columns: repeat(3, 1fr); }
+
+        .shot-wrapper { position: relative; background: #1e293b; aspect-ratio: 16 / 10; overflow: hidden; }
+        .shot-wrapper img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
+
+        .shot-label {
+            position: absolute; top: 10px; left: 10px; background: rgba(15, 23, 42, 0.8); color: var(--primary-accent);
+            padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; z-index: 10;
+            border: 1px solid var(--border-glow); backdrop-filter: blur(4px);
+        }
+
+        /* 参考图展示区 */
+        .reference-section { padding: 20px; background: rgba(167, 139, 250, 0.05); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .reference-label { font-size: 12px; color: var(--primary-accent); margin-bottom: 12px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .reference-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+
+        .story-info { padding: 24px; background: rgba(15, 23, 42, 0.2); }
+        .story-title { font-size: 18px; font-weight: 700; margin-bottom: 12px; color: #fff; }
+        .story-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+        .story-tag { 
+            font-size: 11px; background: rgba(167, 139, 250, 0.1); color: var(--primary-accent); 
+            padding: 4px 12px; border-radius: 100px; border: 1px solid rgba(167, 139, 250, 0.2);
+        }
+
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px; border-radius: 50px;
+            text-decoration: none; font-weight: 600; font-size: 14px; transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.05); color: var(--secondary-accent); border: 1px solid rgba(96, 165, 250, 0.3);
+        }
+        .back-btn:hover { background: #2563eb; color: #ffffff; transform: translateX(-5px); }
+
+        .img-preview-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(20px); display: none; align-items: center; justify-content: center; z-index: 9999; cursor: zoom-out; }
+        .img-preview-modal.active { display: flex; }
+        .img-preview-img { max-width: 95%; max-height: 90%; object-fit: contain; border-radius: 8px; }
+
+        @media (max-width: 768px) { .shot-sequence, .shot-sequence.grid-6 { grid-template-columns: repeat(2, 1fr); } }
+    </style>
+</head>
+<body>
+    <div class="resume-card">
+        <h1>范建斌 | ComfyUI AIGC工程师</h1>
+        <p style="font-size:16px; color:#94a3b8; margin-bottom:16px;">28岁 | 广州 | 计算机技术硕士 | 分镜脚本/影视工业化方向</p>
+        <hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:20px 0;">
+        <ul style="list-style:none; font-size:14px; color:#cbd5e1; display:flex; gap:20px; flex-wrap:wrap;">
+            <li>🎯 Qwen-2.5-VL 叙事/空间双驱动</li>
+            <li>🚀 Lightning-4steps 工业级交付</li>
+            <li>🎞️ SeedVR 2.0 像素级重塑</li>
+        </ul>
+    </div>
+
+    <div class="main-container">
+        <div class="page-header">
+            <a href="index.html" class="back-btn">← 返回首页</a>
+            <h2 style="font-size: 28px; font-weight: 700;">分镜脚本 / Storyboarding</h2>
+        </div>
+
+        <script>
+            // 配置本地文件夹基础路径
+            const basePath = 'workflow/storyboard/';
+
+            // 数据定义：模块一（空间一致性）
+            const spatialModule = {
+                workflow: "workflow_spatial.png",
+                desc: "<strong>核心逻辑：</strong>该模块利用 VLM 对单图的空间拓扑理解，并行触发方位角偏移采样。确保在复杂的过肩反打镜头中保持物理结构的一致性。",
+                cases: [
+                    { 
+                        id: 1, 
+                        title: "Case 01. 动漫猫耳女孩 (单人机位变换)", 
+                        tags: ["Azimuth 45°", "Lightning XL"], 
+                        shots: ["c1_s1.png", "c1_s2.png", "c1_s3.png", "c1_s4.png"],
+                        labels: ["前侧 45°", "俯视机位", "水平特写", "侧后机位"] 
+                    },
+                    { 
+                        id: 2, 
+                        title: "Case 02. 室内双人对话 (空间机位对打)", 
+                        tags: ["过肩镜头", "多主体一致性"], 
+                        shots: ["c2_s1.png", "c2_s2.png", "c2_s3.png", "c2_s4.png"],
+                        labels: ["双人全景", "角色A过肩", "角色B过肩", "对峙中景"] 
+                    }
+                ]
+            };
+
+            // 数据定义：模块二（叙事逻辑）
+            const narrativeModule = {
+                workflow: "workflow_narrative.png",
+                desc: "<strong>技术细节：</strong>基于 <strong>Qwen-2.5-VL-7B-Edit</strong> 引擎实现序列续写。配合 <strong>Lightning-4steps</strong> 采样及 <strong>SeedVR 2.0</strong> 进行 1080P 超清增强。",
+                cases: [
+                    { 
+                        id: 3, 
+                        title: "Case 03. 地铁孤影 (Qwen-VL 叙事连贯序列)", 
+                        tags: ["Qwen-Edit 语义锚点", "Narrative Continuity", "SeedVR 增强"], 
+                        shots: ["c3_s1.png", "c3_s2.png", "c3_s3.png", "c3_s4.png", "c3_s5.png", "c3_s6.png"],
+                        labels: ["Scene 1: 推进特写", "Scene 2: 环绕机位", "Scene 3: 俯拍构图", "Scene 4: 外部追踪", "Scene 5: 手部特写", "Scene 6: 低角度跟随"] 
+                    },
+                    {
+                        id: 4,
+                        title: "Case 04. 跨时空嬉戏 (多角色自动分镜)",
+                        tags: ["多主体一致性", "角色联动", "SeedVR 2.0 增强"],
+                        references: [
+                            { label: "主体 A：古风汉服少女", file: "c4_refA.png" },
+                            { label: "主体 B：现代眼镜少女", file: "c4_refB.png" }
+                        ],
+                        shots: ["c4_s1.png", "c4_s2.png", "c4_s3.png", "c4_s4.png", "c4_s5.png", "c4_s6.png"],
+                        labels: ["Scene 1: 全景开启", "Scene 2: 中景跟拍", "Scene 3: 侧移近景", "Scene 4: 情感特写", "Scene 5: 俯拍环绕", "Scene 6: 拉远全景"]
+                    }
+                ]
+            };
+
+            function renderSection(title, moduleData, containerId) {
+                document.write(`<h3 class="section-title">${title}</h3>`);
+                document.write(`
+                    <div class="workflow-card">
+                        <div class="img-display-area" onclick="openPreview('${basePath}${moduleData.workflow}')">
+                            <img src="${basePath}${moduleData.workflow}" onerror="this.src='https://placehold.co/1200x300/1e293b/64748b?text=Workflow+Screenshot'">
+                        </div>
+                        <div class="workflow-desc"><p style="color:#94a3b8; font-size:14px; margin-top:16px;">${moduleData.desc}</p></div>
+                    </div>
+                    <div class="story-grid">
+                `);
+
+                moduleData.cases.forEach(c => {
+                    let refsHTML = '';
+                    if (c.references) {
+                        refsHTML = `
+                            <div class="reference-section">
+                                <div class="reference-label">📁 人物特征输入 (Multi-Subject Reference)</div>
+                                <div class="reference-grid">
+                                    ${c.references.map(ref => `
+                                        <div class="shot-wrapper" style="border: 1px dashed var(--border-glow); border-radius: 8px;">
+                                            <span class="shot-label" style="background:var(--primary-accent); color:#000;">${ref.label}</span>
+                                            <img src="${basePath}${ref.file}" onclick="openPreview('${basePath}${ref.file}')" onerror="this.src='https://placehold.co/300x200/0f172a/475569?text=Ref'">
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    const gridClass = c.shots.length === 6 ? 'shot-sequence grid-6' : 'shot-sequence';
+                    let shotsHTML = c.shots.map((img, idx) => `
+                        <div class="shot-wrapper">
+                            <span class="shot-label">${c.labels[idx]}</span>
+                            <img src="${basePath}${img}" onclick="openPreview('${basePath}${img}')" onerror="this.src='https://placehold.co/400x250/1e293b/475569?text=Shot+${idx+1}'">
+                        </div>
+                    `).join('');
+
+                    document.write(`
+                        <div class="story-item">
+                            ${refsHTML}
+                            <div style="padding: 15px 24px 5px; font-size: 11px; color: #64748b; font-weight:600;">🎬 生成的分镜序列 (Generated Sequence)</div>
+                            <div class="${gridClass}">${shotsHTML}</div>
+                            <div class="story-info">
+                                <h4 class="story-title">${c.title}</h4>
+                                <div class="story-tags">${c.tags.map(t => `<span class="story-tag">${t}</span>`).join('')}</div>
+                            </div>
+                        </div>
+                    `);
+                });
+                document.write(`</div>`);
+            }
+
+            // 执行渲染
+            renderSection("模块一：多视角空间一致性 (Multi-View Consistency)", spatialModule);
+            renderSection("模块二：叙事逻辑与自动分镜 (Narrative Sequence)", narrativeModule);
+        </script>
+    </div>
+
+    <footer style="text-align:center; color:#64748b; font-size:14px; padding:48px;">© 2026 范建斌 | ComfyUI AIGC工程师 | 广州</footer>
+
+    <div class="img-preview-modal" id="modal" onclick="this.classList.remove('active')">
+        <img id="modalImg" src="" class="img-preview-img">
+    </div>
+
+    <script>
+        function openPreview(url) {
+            const modal = document.getElementById('modal');
+            const modalImg = document.getElementById('modalImg');
+            modalImg.src = url;
+            modal.classList.add('active');
+        }
+    </script>
+</body>
+</html>

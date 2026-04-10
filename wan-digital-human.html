@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数字人创作 - 范建斌 | ComfyUI AIGC工程师</title>
+    <style>
+        /* ============================================================
+           核心一致性样式：金黄色数字人主题
+           ============================================================ */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Inter", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif; }
+
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 32px 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* 顶部个人简历卡片 */
+        .resume-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .resume-card h1 {
+            font-size: 32px;
+            background: linear-gradient(90deg, #fbbf24, #f59e0b); 
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+            font-weight: 800;
+        }
+
+        .base-info { font-size: 16px; color: #94a3b8; margin-bottom: 16px; letter-spacing: 0.5px; }
+        .resume-card hr { border: none; border-top: 1px solid rgba(255, 255, 255, 0.1); margin: 20px 0; }
+        .intro-list { margin-left: 20px; margin-bottom: 24px; color: #cbd5e1; font-size: 15px; }
+        .intro-list li { margin-bottom: 8px; }
+
+        /* 主容器 */
+        .main-container {
+            background: rgba(30, 41, 59, 0.3);
+            border-radius: 24px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 40px;
+        }
+
+        .page-header { display: flex; align-items: center; margin-bottom: 40px; }
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px; border-radius: 50px;
+            text-decoration: none; font-weight: 600; transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.05); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+        .back-btn:hover { background: #d97706; color: #ffffff; transform: translateX(-5px); }
+
+        .section-title { font-size: 22px; font-weight: 700; color: #ffffff; margin-bottom: 24px; padding-left: 15px; border-left: 4px solid #fbbf24; }
+
+        /* 工作流展示区域 */
+        .workflow-card { background: rgba(15, 23, 42, 0.3); border-radius: 20px; padding: 30px; border: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 48px; }
+        .img-display-area { width: 100%; border-radius: 16px; overflow: hidden; border: 1px solid rgba(251, 191, 36, 0.3); background: #000; cursor: zoom-in; transition: 0.3s; }
+        .img-display-area:hover { border-color: #fbbf24; box-shadow: 0 0 20px rgba(251, 191, 36, 0.2); }
+        .img-display-area img { width: 100%; display: block; }
+        .workflow-desc { margin-top: 24px; color: #94a3b8; font-size: 15px; line-height: 1.8; }
+
+        /* 案例布局 */
+        .examples-grid { display: grid; grid-template-columns: repeat(1, 1fr); gap: 32px; }
+        .example-card { background: rgba(30, 41, 59, 0.4); border-radius: 20px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.05); transition: 0.4s ease; }
+        .example-card:hover { border-color: rgba(251, 191, 36, 0.3); box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
+
+        .example-images { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; background: rgba(255, 255, 255, 0.05); }
+        .example-img-wrapper { position: relative; width: 100%; aspect-ratio: 1; background: rgba(15, 23, 42, 0.6); display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: zoom-in;}
+        .example-img-wrapper img, .example-img-wrapper video { width: 100%; height: 100%; object-fit: cover; }
+        .example-label { position: absolute; top: 10px; left: 10px; background: rgba(15, 23, 42, 0.85); color: #fbbf24; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; z-index: 10; border: 1px solid rgba(251, 191, 36, 0.2); backdrop-filter: blur(4px); }
+
+        .example-info { padding: 24px; }
+        .example-style { font-size: 18px; font-weight: 700; color: #ffffff; margin-bottom: 8px; }
+        .example-desc { font-size: 14px; color: #94a3b8; line-height: 1.6; }
+
+        /* 预览弹窗 */
+        .img-preview-modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 20px; cursor: zoom-out; }
+        .img-preview-modal.active { display: flex; }
+        .modal-media { max-width: 95%; max-height: 85vh; border-radius: 12px; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+        
+        /* 音频预览容器 */
+        #modalAudioContainer { display: none; background: #1e293b; padding: 40px 60px; border-radius: 24px; border: 1px solid rgba(251, 191, 36, 0.4); text-align: center; cursor: default; }
+
+        @media (max-width: 768px) { .example-images { grid-template-columns: 1fr; } .example-img-wrapper { aspect-ratio: 16/9; } }
+    </style>
+</head>
+<body>
+    <div class="resume-card">
+        <h1>范建斌 | ComfyUI AIGC工程师</h1>
+        <p class="base-info">28岁 | 广州 | 计算机技术硕士 | 数字人/表情驱动/WanVideo方向</p>
+        <hr>
+        <ul class="intro-list">
+            <li>精通 <strong>infinitetalk</strong> 与 <strong>WanVideo</strong> 结合的数字人驱动方案；</li>
+            <li>擅长实现精准的口型对齐（Lip-Sync）与情感化面部表情细粒度控制；</li>
+            <li>深度优化具有电影感运镜的动态数字人，解决背景畸变与人物漂移痛点。</li>
+        </ul>
+    </div>
+
+    <div class="main-container">
+        <div class="page-header">
+            <a href="index.html" class="back-btn">← 返回首页</a>
+        </div>
+
+        <div class="workflow-section">
+            <h3 class="section-title">数字人驱动工作流架构</h3>
+            <div class="workflow-card">
+                <div class="img-display-area" onclick="openPreview('workflow/wan-digital-human/workflow_dh_main.png', 'image')">
+                    <img src="workflow/wan-digital-human/workflow_dh_main.png" alt="工作流" onerror="this.src='https://placehold.co/1200x600/0f172a/fbbf24?text=workflow_dh_main.png'">
+                </div>
+                <p class="workflow-desc">
+                    <strong>技术特性：</strong>该方案集成了 <strong>infinitetalk</strong> 的面部驱动技术与 <strong>WanVideo</strong> 的时序增强能力。支持从静态口播到复杂动态运镜的全面覆盖，确保在提升生成质量的同时保持极高的身份（ID）一致性。
+                </p>
+            </div>
+        </div>
+
+        <h3 class="section-title">核心业务板块演示</h3>
+        <div class="examples-grid" id="examplesGrid">
+            <script>
+                const basePath = 'workflow/wan-digital-human/';
+                const scenes = [
+                    { id: 1, p: "dh1", title: "静态口播数字人", desc: "侧重于极致的口型对齐与微表情还原。适用于知识分享场景。" },
+                    { id: 2, p: "dh2", title: "多人对话数字人", desc: "结合 WanVideo 生成包含推拉摇移、主体环绕等运镜效果的数字人。" },
+                    { id: 3, p: "dh3", title: "动态运镜数字人", desc: "展现数字人在高对比度或复杂光影下的面部稳定性，支持大幅度头部转动与细腻的情感流露。" }
+                ];
+
+                scenes.forEach((s) => {
+                    const imgRef = `${basePath}${s.p}_ref.png`;
+                    const audioSrc = `${basePath}${s.p}_audio.flac`; 
+                    const videoRes = `${basePath}${s.p}_res.mp4`;
+
+                    document.write(`
+                        <div class="example-card">
+                            <div class="example-images">
+                                <div class="example-img-wrapper" onclick="openPreview('${imgRef}', 'image')">
+                                    <span class="example-label">角色参考图</span>
+                                    <img src="${imgRef}" onerror="this.src='https://placehold.co/400x400/1e293b/475569?text=Ref+Image'">
+                                </div>
+                                <div class="example-img-wrapper" onclick="openPreview('${audioSrc}', 'audio')">
+                                    <span class="example-label" style="background:#ef4444; border-color:rgba(239, 68, 68, 0.2)">驱动音频</span>
+                                    <div style="text-align:center; color:#fbbf24;">
+                                        <div style="font-size:44px; margin-bottom:8px;">🎵</div>
+                                        <div style="font-size:12px; font-weight:700; opacity:0.7; letter-spacing:1px;">AUDIO SOURCE</div>
+                                    </div>
+                                </div>
+                                <div class="example-img-wrapper" style="border: 1px solid rgba(251, 191, 36, 0.4)" onclick="openPreview('${videoRes}', 'video')">
+                                    <span class="example-label" style="background:linear-gradient(90deg, #fbbf24, #d97706)">最终结果</span>
+                                    <video src="${videoRes}" muted loop autoplay playsinline poster="https://placehold.co/400x400/0f172a/fbbf24?text=Result+Video"></video>
+                                </div>
+                            </div>
+                            <div class="example-info">
+                                <div class="example-style">${s.id}. ${s.title}</div>
+                                <div class="example-desc">${s.desc}</div>
+                            </div>
+                        </div>
+                    `);
+                });
+            </script>
+        </div>
+    </div>
+
+    <footer style="text-align:center; color:#64748b; font-size:14px; padding:48px;">© 2026 范建斌 | ComfyUI AIGC工程师 | 广州</footer>
+
+    <div class="img-preview-modal" id="modal" onclick="closeModal()">
+        <img id="modalImg" src="" class="modal-media" style="display:none;">
+        <video id="modalVideo" controls autoplay loop class="modal-media" style="display:none;"></video>
+        <div id="modalAudioContainer" onclick="event.stopPropagation()">
+            <div style="font-size:60px; margin-bottom:20px;">🎵</div>
+            <div style="color:#ffffff; margin-bottom:24px; font-weight:700;">音频驱动源试听</div>
+            <audio id="modalAudio" controls autoplay style="width:300px;"></audio>
+        </div>
+    </div>
+
+    <script>
+        function openPreview(url, type) {
+            const modal = document.getElementById('modal');
+            const mImg = document.getElementById('modalImg');
+            const mVideo = document.getElementById('modalVideo');
+            const mAudioCont = document.getElementById('modalAudioContainer');
+            const mAudio = document.getElementById('modalAudio');
+
+            mImg.style.display = "none";
+            mVideo.style.display = "none";
+            mAudioCont.style.display = "none";
+            mVideo.pause();
+            mAudio.pause();
+
+            if (type === 'video') {
+                mVideo.style.display = "block";
+                mVideo.src = url;
+                mVideo.play();
+            } else if (type === 'audio') {
+                mAudioCont.style.display = "block";
+                mAudio.src = url;
+                mAudio.play();
+            } else {
+                mImg.style.display = "block";
+                mImg.src = url;
+            }
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            const v = document.getElementById('modalVideo');
+            const a = document.getElementById('modalAudio');
+            modal.classList.remove('active');
+            setTimeout(() => {
+                v.pause(); v.src = "";
+                a.pause(); a.src = "";
+            }, 300);
+        }
+    </script>
+</body>
+</html>
+```

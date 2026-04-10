@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>长视频生成专项 - 范建斌 | ComfyUI AIGC工程师</title>
+    <style>
+        /* ============================================================
+           核心一致性样式 (继承自原有蓝色调视觉)
+           ============================================================ */
+        :root {
+            --primary-accent: #3b82f6; 
+            --secondary-accent: #60a5fa;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --border-glow: rgba(59, 130, 246, 0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Inter", "PingFang SC", system-ui, sans-serif; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #f8fafc;
+            padding: 40px 20px;
+            max-width: 1400px; 
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .resume-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 32px;
+            margin-bottom: 40px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        .resume-card h1 {
+            font-size: 32px;
+            background: linear-gradient(90deg, var(--primary-accent), var(--secondary-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+            font-weight: 800;
+        }
+
+        .main-container {
+            background: rgba(30, 41, 59, 0.3);
+            border-radius: 28px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 40px 0 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title::before {
+            content: ""; width: 4px; height: 20px;
+            background: var(--primary-accent); border-radius: 10px;
+        }
+
+        .workflow-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+        
+        .workflow-card {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px solid var(--border-glow);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 静态展示区域 */
+        .img-display-area {
+            width: 100%; border-radius: 12px; background: #000;
+            overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: zoom-in; transition: 0.3s;
+        }
+        .img-display-area img { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+        .example-grid { display: grid; gap: 40px; margin-bottom: 60px; }
+        .example-item {
+            background: rgba(30, 41, 59, 0.4); border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08); overflow: hidden; padding: 24px;
+        }
+
+        .example-header { font-size: 16px; font-weight: 700; color: var(--secondary-accent); margin-bottom: 16px; }
+
+        .sequence-layout { display: flex; gap: 24px; align-items: center; }
+        .input-frames { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; flex: 1; }
+        .input-frames.single-mode { display: flex; flex-direction: column; }
+
+        .result-video-large {
+            flex: 1.2; aspect-ratio: 16 / 9; background: #000;
+            border-radius: 12px; overflow: hidden; position: relative;
+            border: 1px solid var(--primary-accent); cursor: zoom-in;
+        }
+        .result-video-large video { width: 100%; height: 100%; object-fit: cover; }
+
+        .key-wrapper {
+            position: relative; background: #1e293b; aspect-ratio: 16 / 9;
+            border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);
+            cursor: zoom-in;
+        }
+        .key-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+
+        .key-label {
+            position: absolute; top: 6px; left: 6px; background: rgba(15, 23, 42, 0.8);
+            color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 9px;
+            z-index: 10; backdrop-filter: blur(4px); pointer-events: none;
+        }
+
+        .page-header { display: flex; align-items: center; margin-bottom: 40px; }
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px;
+            border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 14px;
+            background: rgba(255, 255, 255, 0.05); color: var(--secondary-accent); 
+            border: 1px solid var(--border-glow); transition: 0.3s;
+        }
+        .back-btn:hover { background: var(--primary-accent); color: #fff; transform: translateX(-5px); }
+
+        /* 弹窗样式 */
+        .img-preview-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(20px); display: none; align-items: center; justify-content: center; z-index: 9999; cursor: zoom-out; }
+        .img-preview-modal.active { display: flex; }
+        .modal-media { max-width: 95%; max-height: 90%; object-fit: contain; border-radius: 8px; }
+
+        @media (max-width: 1100px) {
+            .sequence-layout { flex-direction: column; }
+            .input-frames { width: 100%; }
+            .workflow-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="resume-card">
+        <h1>范建斌 | ComfyUI AIGC工程师</h1>
+        <p class="base-info">28岁 | 广州 | 计算机技术硕士 | WanVideo (万相) 长视频生成专项</p>
+        <hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:20px 0;">
+        <ul style="list-style:none; font-size:14px; color:#cbd5e1; display:flex; gap:20px; flex-wrap:wrap;">
+            <li>🚀 10s+ 超长连贯性生成 (Long Context)</li>
+            <li>🧩 递归式采样优化 (Recursive Sampling)</li>
+            <li>🧪 多帧潜空间一致性方案</li>
+        </ul>
+    </div>
+
+    <div class="main-container">
+        <div class="page-header">
+            <a href="index.html" class="back-btn">← 返回首页</a>
+        </div>
+
+        <h3 class="section-title">核心模块：长视频生成工作流</h3>
+        <div class="workflow-grid">
+            <div class="workflow-card">
+                <h4 style="margin-bottom:12px; color:var(--secondary-accent)">① 单张图片长视频生成 (I2V-Extender)</h4>
+                <div class="img-display-area" onclick="openPreview('workflow/wan-long-video/workflow_single.png', false)">
+                    <img src="workflow/wan-long-video/workflow_single.png" onerror="this.src='https://placehold.co/800x450/0f172a/3b82f6?text=Workflow+Single'">
+                </div>
+                <p style="color:#94a3b8; font-size:13px; margin-top:12px;">
+                    利用 Wan-I2V 的自回归能力，通过循环采样实现 10-20 秒的生成。
+                </p>
+            </div>
+
+            <div class="workflow-card">
+                <h4 style="margin-bottom:12px; color:var(--secondary-accent)">② 多帧图片长视频生成 (Story-to-Video)</h4>
+                <div class="img-display-area" onclick="openPreview('workflow/wan-long-video/workflow_multi.png', false)">
+                    <img src="workflow/wan-long-video/workflow_multi.png" onerror="this.src='https://placehold.co/800x450/0f172a/3b82f6?text=Workflow+Multi'">
+                </div>
+                <p style="color:#94a3b8; font-size:13px; margin-top:12px;">
+                    基于多张关键帧图片，通过分段插值与全局引导，确保超长视频的一致性。
+                </p>
+            </div>
+        </div>
+
+        <h3 class="section-title">生成案例展示 (Generation Cases)</h3>
+        <div class="example-grid" id="casesGrid">
+            <script>
+                const basePath = 'workflow/wan-long-video/';
+                const cases = [
+                    { id: 1, title: "单图案例：餐厅点餐", type: 'single', frameCount: 1, p: "case1" },
+                    { id: 2, title: "多帧案例：地铁女孩 (6帧生成)", type: 'multi', frameCount: 6, p: "case2" },
+                    { id: 3, title: "多帧案例：墨染星尘 (4帧生成)", type: 'multi', frameCount: 4, p: "case3" }
+                ];
+
+                cases.forEach(c => {
+                    let framesHTML = '';
+                    let framesClass = c.type === 'single' ? 'single-mode' : '';
+                    const videoRes = `${basePath}${c.p}_video.mp4`;
+
+                    for(let i=1; i<=c.frameCount; i++) {
+                        const imgUrl = `${basePath}${c.p}_f${i}.png`;
+                        framesHTML += `
+                            <div class="key-wrapper" onclick="openPreview('${imgUrl}', false)">
+                                <span class="key-label">${c.type === 'single' ? 'INPUT IMAGE' : 'FRAME 0' + i}</span>
+                                <img src="${imgUrl}" onerror="this.src='https://placehold.co/400x225/1e293b/475569?text=Frame+${i}'">
+                            </div>
+                        `;
+                    }
+
+                    document.write(`
+                        <div class="example-item">
+                            <div class="example-header"><span>${c.title}</span></div>
+                            <div class="sequence-layout">
+                                <div class="input-frames ${framesClass}">${framesHTML}</div>
+                                <div class="result-video-large" onclick="openPreview('${videoRes}', true)">
+                                    <span class="key-label" style="background:var(--primary-accent)">FINAL LONG VIDEO</span>
+                                    <video src="${videoRes}" muted loop autoplay playsinline poster="https://placehold.co/600x337/000/3b82f6?text=Video+Loading"></video>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                });
+            </script>
+        </div>
+    </div>
+
+    <div class="img-preview-modal" id="modal" onclick="closeModal()">
+        <img id="modalImg" src="" class="modal-media" style="display:none;">
+        <video id="modalVideo" controls autoplay loop class="modal-media" style="display:none;"></video>
+    </div>
+
+    <script>
+        function openPreview(url, isVideo) {
+            const modal = document.getElementById('modal');
+            const mImg = document.getElementById('modalImg');
+            const mVideo = document.getElementById('modalVideo');
+
+            if (isVideo) {
+                mImg.style.display = "none";
+                mVideo.style.display = "block";
+                mVideo.src = url;
+            } else {
+                mVideo.style.display = "none";
+                mImg.style.display = "block";
+                mImg.src = url;
+            }
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            const v = document.getElementById('modalVideo');
+            modal.classList.remove('active');
+            v.pause();
+            v.src = "";
+        }
+    </script>
+</body>
+</html>

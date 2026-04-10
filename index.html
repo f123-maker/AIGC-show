@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>范建斌 | ComfyUI AIGC工程师 作品集</title>
+    <style>
+        /* 全局样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Inter", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+        }
+
+        body {
+            background-color: #0f172a; /* 深色背景 */
+            color: #f8fafc;
+            padding: 32px 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* 顶部个人简历卡片 */
+        .resume-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 48px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .resume-card h1 {
+            font-size: 36px;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+            font-weight: 800;
+        }
+
+        .base-info {
+            font-size: 17px;
+            color: #94a3b8;
+            margin-bottom: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .resume-card hr {
+            border: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .intro-list {
+            margin-left: 20px;
+            margin-bottom: 30px;
+            line-height: 1.8;
+            color: #cbd5e1;
+            font-size: 16px;
+        }
+
+        .intro-list li { margin-bottom: 10px; }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            font-size: 15px;
+            color: #94a3b8;
+        }
+
+        /* 主容器 */
+        .main-container {
+            background: rgba(30, 41, 59, 0.3);
+            border-radius: 24px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 48px;
+        }
+
+        .section-header {
+            display: inline-block;
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: 700;
+            padding: 12px 32px;
+            border-radius: 50px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 子板块小标题样式 */
+        .sub-section-header {
+            font-size: 18px;
+            font-weight: 600;
+            color: #f8fafc;
+            margin: 20px 0 24px 10px;
+            padding-left: 15px;
+            border-left: 4px solid #60a5fa;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .sub-wan { border-left-color: #10b981; } /* 万相绿色系 */
+        .sub-ltx { border-left-color: #f59e0b; } /* LTX橙色系 */
+
+        /* 图像板块色调 */
+        .header-image { background: linear-gradient(135deg, #2563eb, #7c3aed); }
+        /* 视频板块色调 */
+        .header-video { background: linear-gradient(135deg, #ec4899, #8b5cf6); }
+
+        /* 网格布局 */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+            margin-bottom: 40px;
+        }
+
+        /* 核心功能卡片 */
+        .function-card {
+            position: relative;
+            height: 420px;
+            border-radius: 20px;
+            overflow: hidden;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .card-bg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: transform 0.8s ease;
+            z-index: 1;
+        }
+
+        .function-card::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0) 0%, rgba(15, 23, 42, 0.95) 85%);
+            z-index: 2;
+        }
+
+        .card-content {
+            position: relative;
+            z-index: 3;
+            transform: translateY(10px);
+            transition: transform 0.4s ease;
+        }
+
+        .card-icon {
+            position: absolute;
+            top: -260px;
+            right: 0;
+            font-size: 32px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            width: 56px; height: 56px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.4s ease;
+        }
+
+        .card-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 12px;
+        }
+
+        .card-desc {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #cbd5e1;
+            margin-bottom: 24px;
+            opacity: 0.8;
+        }
+
+        .tags-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            background: rgba(255, 255, 255, 0.1);
+            color: #60a5fa;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid rgba(96, 165, 250, 0.2);
+        }
+
+        /* 悬浮动效 */
+        .function-card:hover {
+            transform: translateY(-12px);
+            border-color: rgba(96, 165, 250, 0.5);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .function-card:hover .card-bg { transform: scale(1.1); }
+        .function-card:hover .card-content { transform: translateY(0); }
+        .function-card:hover .card-icon { background: #2563eb; transform: rotate(10deg); }
+
+        /* 背景图片映射 - 图像 */
+        .bg-style { background-image: url('./images/style.jpg'); }
+        .bg-control { background-image: url('./images/control.jpg'); }
+        .bg-restore { background-image: url('./images/restore.jpg'); }
+        .bg-inpaint { background-image: url('./images/inpaint.jpg'); }
+        .bg-character { background-image: url('./images/character.jpg'); }
+        .bg-story { background-image: url('./images/story.jpg'); }
+        
+        /* 背景图片映射 - 万相 */
+        .bg-wan-keyframes { background-image: url('./images/wan_keyframes.jpg'); }
+        .bg-wan-long { background-image: url('./images/wan_long.jpg'); }
+        .bg-wan-animate { background-image: url('./images/wan_animate.jpg'); }
+        .bg-wan-avatar { background-image: url('./images/wan_avatar.jpg'); }
+
+        /* 背景图片映射 - LTX (更新) */
+        .bg-ltx-i2v { background-image: url('./images/ltx_i2v.jpg'); }
+        .bg-ltx-mv { background-image: url('./images/ltx_mv.jpg'); }
+        .bg-ltx-motion { background-image: url('./images/ltx_motion.jpg'); }
+        .bg-ltx-audio { background-image: url('./images/ltx_audio.jpg'); }
+        .bg-ltx-inpaint { background-image: url('./images/ltx_inpaint.jpg'); }
+
+        .footer {
+            text-align: center;
+            padding: 48px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        /* 响应式 */
+        @media (max-width: 1100px) { .cards-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 700px) {
+            .cards-grid { grid-template-columns: 1fr; }
+            .resume-card { padding: 24px; }
+            .main-container { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="resume-card">
+        <h1>范建斌 | ComfyUI AIGC工程师</h1>
+        <p class="base-info">28岁 | 广州 | 计算机技术硕士 | 图像处理/机器学习/AIGC方向</p>
+        <hr>
+        <ul class="intro-list">
+            <li>精通ComfyUI工作流设计与插件开发，uinodes.com 教学内容贡献者；</li>
+            <li>熟练完成Flux/WanVideo LoRA训练微调，具备商业落地全栈能力；</li>
+            <li>拥有多项发明专利及工业级视觉算法项目经验。</li>
+        </ul>
+        <div class="contact-grid">
+            <div>📞 电话: 15770610878</div>
+            <div>📧 邮箱: 1446484621@qq.com</div>
+            <div>🎓 广东技术师范大学 (2021.9-2024.7)</div>
+            <div>📚 南昌大学科学技术学院 (2016.9-2020.7)</div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="section-header header-image">图像生成核心板块</div>
+
+        <div class="cards-grid">
+            <a href="style-transfer.html" class="function-card">
+                <div class="card-bg bg-style"></div>
+                <div class="card-icon">🎨</div>
+                <div class="card-content">
+                    <h2 class="card-title">风格迁移</h2>
+                    <p class="card-desc">基于 Flux-2-KLEIN 与 Qwen3.5 VLM 技术，实现 3D 迪士尼、梵高油画等艺术风格的高保真迁移。</p>
+                    <div class="tags-group">
+                        <span class="tag">Flux-2-KLEIN</span>
+                        <span class="tag">高保真</span>
+                        <span class="tag">VLM反推</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="controlnet.html" class="function-card">
+                <div class="card-bg bg-control"></div>
+                <div class="card-icon">⚙️</div>
+                <div class="card-content">
+                    <h2 class="card-title">ControlNet 控图</h2>
+                    <p class="card-desc">姿态、边缘、深度全维度精准控制，实现 100% 符合商业需求的构图与动作生成。</p>
+                    <div class="tags-group">
+                        <span class="tag">Z-Image-Turbo</span>
+                        <span class="tag">精准控图</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="image-restore.html" class="function-card">
+                <div class="card-bg bg-restore"></div>
+                <div class="card-icon">🔍</div>
+                <div class="card-content">
+                    <h2 class="card-title">图像放大修复</h2>
+                    <p class="card-desc">低清素材 8K 超清无损放大，去除噪点与压缩痕迹，适用于影视级素材修复。</p>
+                    <div class="tags-group">
+                        <span class="tag">超分模型</span>
+                        <span class="tag">画质增强</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="inpaint.html" class="function-card">
+                <div class="card-bg bg-inpaint"></div>
+                <div class="card-icon">🖌️</div>
+                <div class="card-content">
+                    <h2 class="card-title">局部重绘</h2>
+                    <p class="card-desc">指定区域精准编辑，支持物体替换、背景修改与瑕疵消除，满足精细化设计需求。</p>
+                    <div class="tags-group">
+                        <span class="tag">Inpaint</span>
+                        <span class="tag">局部编辑</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="character-edit.html" class="function-card">
+                <div class="card-bg bg-character"></div>
+                <div class="card-icon">🎭</div>
+                <div class="card-content">
+                    <h2 class="card-title">人物编辑/换脸</h2>
+                    <p class="card-desc">一键换装、人脸替换、姿态修改，保留 IP 特征的无痕二创，适用于短视频模特创作。</p>
+                    <div class="tags-group">
+                        <span class="tag">IP-Adapter</span>
+                        <span class="tag">人脸替换</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="storyboard.html" class="function-card">
+                <div class="card-bg bg-story"></div>
+                <div class="card-icon">🎬</div>
+                <div class="card-content">
+                    <h2 class="card-title">分镜图生成</h2>
+                    <p class="card-desc">批量产出镜头语言统一的可视化分镜，大幅提升影视与动漫的前期创作效率。</p>
+                    <div class="tags-group">
+                        <span class="tag">分镜脚本</span>
+                        <span class="tag">影视创作</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="section-header header-video">视频生成核心板块</div>
+
+        <div class="sub-section-header sub-wan">
+            <span>🎬 WanVideo (万相) 生态 - 专业影视工作流</span>
+        </div>
+        <div class="cards-grid">
+            <a href="wan-keyframes.html" class="function-card">
+                <div class="card-bg bg-wan-keyframes"></div>
+                <div class="card-icon">🎞️</div>
+                <div class="card-content">
+                    <h2 class="card-title">首尾帧视频</h2>
+                    <p class="card-desc">精准控制起始与结束关键帧，实现逻辑严密的动作补全与电影级丝滑过渡。</p>
+                    <div class="tags-group">
+                        <span class="tag">关键帧控制</span>
+                        <span class="tag">插值算法</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="wan-long-video.html" class="function-card">
+                <div class="card-bg bg-wan-long"></div>
+                <div class="card-icon">🎥</div>
+                <div class="card-content">
+                    <h2 class="card-title">多帧长视频</h2>
+                    <p class="card-desc">通过时序引导与分段生成技术，突破时长限制，输出具有强一致性的长篇幅视频内容。</p>
+                    <div class="tags-group">
+                        <span class="tag">时序引导</span>
+                        <span class="tag">长序列生成</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="wan-animate.html" class="function-card">
+                <div class="card-bg bg-wan-animate"></div>
+                <div class="card-icon">🎭</div>
+                <div class="card-content">
+                    <h2 class="card-title">Wan animate二创</h2>
+                    <p class="card-desc">结合 LoRA 训练与 Wan Animate 架构，实现动漫 IP 或特定风格的高保真角色动作还原。</p>
+                    <div class="tags-group">
+                        <span class="tag">角色一致性</span>
+                        <span class="tag">LoRA微调</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="wan-digital-human.html" class="function-card">
+                <div class="card-bg bg-wan-avatar"></div>
+                <div class="card-icon">👤</div>
+                <div class="card-content">
+                    <h2 class="card-title">数字人</h2>
+                    <p class="card-desc">实现精准的口型对齐与面部表情驱动，打造具有真实交互感的虚拟播报与数字分身。</p>
+                    <div class="tags-group">
+                        <span class="tag">口型对齐</span>
+                        <span class="tag">表情驱动</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="sub-section-header sub-ltx">
+            <span>⚡ LTX-Video 2.3 生态 - 高性能创作</span>
+        </div>
+        <div class="cards-grid">
+            <a href="ltx-i2v.html" class="function-card">
+                <div class="card-bg bg-ltx-i2v"></div>
+                <div class="card-icon">🌀</div>
+                <div class="card-content">
+                    <h2 class="card-title">图生视频</h2>
+                    <p class="card-desc">利用 LTX 独有的时间轴注入算法，确保首尾帧完美衔接，实现高时序一致性的无缝循环动效。</p>
+                    <div class="tags-group">
+                        <span class="tag">LTX-I2V</span>
+                        <span class="tag">高一致性</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="ltx-mv.html" class="function-card">
+                <div class="card-bg bg-ltx-mv"></div>
+                <div class="card-icon">🎤</div>
+                <div class="card-content">
+                    <h2 class="card-title">数字人 MV</h2>
+                    <p class="card-desc">结合音频驱动与 LTX 极速生成能力，打造口型精准、节奏感强的虚拟人音乐短片与商业播报。</p>
+                    <div class="tags-group">
+                        <span class="tag">音频驱动</span>
+                        <span class="tag">极速出片</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="ltx-motion.html" class="function-card">
+                <div class="card-bg bg-ltx-motion"></div>
+                <div class="card-icon">🏃</div>
+                <div class="card-content">
+                    <h2 class="card-title">动作迁移</h2>
+                    <p class="card-desc">精准提取源视频动作轨迹并注入，实现跨角色、跨风格的专业级动作复刻，保留运动张力。</p>
+                    <div class="tags-group">
+                        <span class="tag">动作捕捉</span>
+                        <span class="tag">时序约束</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="ltx-audio.html" class="function-card">
+                <div class="card-bg bg-ltx-audio"></div>
+                <div class="card-icon">🔊</div>
+                <div class="card-content">
+                    <h2 class="card-title">无声视频配音效</h2>
+                    <p class="card-desc">深度适配 Wan2.2，为生成的无声素材自动匹配高保真环境音效与打击感音轨，补齐视听闭环。</p>
+                    <div class="tags-group">
+                        <span class="tag">Wan2.2 协作</span>
+                        <span class="tag">AI 音效</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="ltx-inpaint.html" class="function-card">
+                <div class="card-bg bg-ltx-inpaint"></div>
+                <div class="card-icon">🖌️</div>
+                <div class="card-content">
+                    <h2 class="card-title">局部重绘</h2>
+                    <p class="card-desc">视频级别的指定区域掩码编辑，支持动态物体的替换、擦除与背景重构，满足精细化修改。</p>
+                    <div class="tags-group">
+                        <span class="tag">视频 Inpaint</span>
+                        <span class="tag">动态编辑</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>© 2026 范建斌 | ComfyUI AIGC工程师 个人作品集 | 广州</p>
+    </footer>
+</body>
+</html>

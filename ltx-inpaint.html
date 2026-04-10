@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LTX-Inpaint 视频局部重绘 - 范建斌 | ComfyUI AIGC工程师</title>
+    <style>
+        /* ============================================================
+           核心一致性样式（沿用 LTX 系列风格）
+           ============================================================ */
+        :root {
+            --primary-accent: #22d3ee; /* Inpaint 专项改用青色调，代表精准编辑 */
+            --secondary-accent: #06b6d4;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --border-glow: rgba(34, 211, 238, 0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Inter", "PingFang SC", system-ui, sans-serif; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #f8fafc;
+            padding: 40px 20px;
+            max-width: 1400px; 
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .resume-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 32px;
+            margin-bottom: 40px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        .resume-card h1 {
+            font-size: 32px;
+            background: linear-gradient(90deg, var(--primary-accent), var(--secondary-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+            font-weight: 800;
+        }
+
+        .main-container {
+            background: rgba(30, 41, 59, 0.3);
+            border-radius: 28px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 40px 0 24px;
+            display: flex;
+            align-items: center; gap: 12px;
+        }
+
+        .section-title::before {
+            content: ""; width: 4px; height: 20px; background: var(--primary-accent); border-radius: 10px;
+        }
+
+        .workflow-card {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 20px; padding: 24px;
+            border: 1px solid var(--border-glow); margin-bottom: 32px;
+        }
+
+        .upload-area {
+            width: 100%; border-radius: 12px; background: rgba(255, 255, 255, 0.03);
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; overflow: hidden; transition: all 0.3s ease;
+        }
+
+        .upload-area.drag-over { border-color: var(--primary-accent); background: rgba(34, 211, 238, 0.1); }
+        .upload-area.has-image { border: none; background: #000; }
+        .upload-area .preview-img, .upload-area .preview-video { width: 100%; height: 100%; object-fit: contain; }
+
+        .example-item {
+            background: rgba(30, 41, 59, 0.4); border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            overflow: hidden; padding: 20px; margin-bottom: 32px;
+        }
+
+        .example-header { font-size: 16px; font-weight: 700; color: var(--secondary-accent); margin-bottom: 16px; }
+
+        .media-sequence { display: grid; gap: 20px; }
+        .cols-3 { grid-template-columns: repeat(3, 1fr); }
+
+        .media-wrapper {
+            position: relative; background: #1e293b; aspect-ratio: 16 / 9;
+            border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .media-label {
+            position: absolute; top: 10px; left: 10px;
+            background: rgba(15, 23, 42, 0.8); color: #fff;
+            padding: 4px 10px; border-radius: 6px; font-size: 11px;
+            font-weight: 700; z-index: 10; backdrop-filter: blur(4px);
+        }
+
+        .upload-area.small { width: 100%; height: 100%; border: none; }
+        .upload-area.small span { font-size: 24px; opacity: 0.3; }
+
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+        .back-btn, .clear-btn {
+            display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px;
+            border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 14px;
+            transition: 0.3s; cursor: pointer;
+        }
+        .back-btn { background: rgba(255, 255, 255, 0.05); color: var(--secondary-accent); border: 1px solid var(--border-glow); }
+        .back-btn:hover { background: var(--primary-accent); color: #fff; }
+        .clear-btn { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        .img-preview-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(20px); display: none; align-items: center; justify-content: center; z-index: 9999; }
+        .img-preview-modal.active { display: flex; }
+        .modal-media { max-width: 95%; max-height: 90%; object-fit: contain; border-radius: 8px; }
+
+        @media (max-width: 1024px) {
+            .media-sequence { grid-template-columns: 1fr !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="resume-card">
+        <h1>范建斌 | ComfyUI AIGC工程师</h1>
+        <p class="base-info">28岁 | 广州 | 计算机技术硕士 | LTX-Video Inpaint 专项工作流</p>
+        <hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:20px 0;">
+        <ul style="list-style:none; font-size:14px; color:#cbd5e1; display:flex; gap:20px; flex-wrap:wrap;">
+            <li>✨ 局部精准编辑 (Precise Local Editing)</li>
+            <li>🧹 智能物体消除 (Smart Object Removal)</li>
+            <li>🖼️ 场景属性重组 (Scene Attribute Refactoring)</li>
+        </ul>
+    </div>
+
+    <div class="main-container">
+        <div class="page-header">
+            <a href="index.html" class="back-btn">← 返回首页</a>
+            <button class="clear-btn" id="clearAllBtn">🗑️ 清空重绘数据</button>
+        </div>
+
+        <h3 class="section-title">核心模块：LTX-Inpaint 视频编辑工作流</h3>
+        <div class="workflow-card">
+            <div class="upload-area" id="inpaintWorkflowUpload" style="min-height: 350px;">
+                <span>⚙️</span>
+                <p style="color:#64748b; font-size:14px; margin-top:10px;">点击上传 LTX-Inpaint 局部重绘工作流截图</p>
+                <input type="file" id="inpaintWorkflowFile" hidden accept="image/*">
+            </div>
+        </div>
+
+        <h3 class="section-title">板块一：元素替换与重绘 (Object Inpainting)</h3>
+        <div class="example-grid" id="replaceGrid"></div>
+
+        <h3 class="section-title">板块二：视频消除与背景修复 (Removal & Eraser)</h3>
+        <div class="example-grid" id="removalGrid"></div>
+    </div>
+
+    <div class="img-preview-modal" id="modal" onclick="closeModal()">
+        <img id="modalImg" src="" class="modal-media" style="display:none;">
+        <video id="modalVideo" controls autoplay loop class="modal-media" style="display:none;"></video>
+    </div>
+
+    <script>
+        const dbName = "Portfolio_LTX_Inpaint_DB";
+        const storeName = "media";
+        const dbPromise = new Promise((resolve) => {
+            const request = indexedDB.open(dbName, 1);
+            request.onupgradeneeded = e => e.target.result.createObjectStore(storeName);
+            request.onsuccess = e => resolve(e.target.result);
+        });
+
+        const mediaDB = {
+            async set(key, value) { const db = await dbPromise; db.transaction(storeName, "readwrite").objectStore(storeName).put(value, key); },
+            async get(key) { const db = await dbPromise; return new Promise(res => { const req = db.transaction(storeName, "readonly").objectStore(storeName).get(key); req.onsuccess = () => res(req.result); }); },
+            async clear() { const db = await dbPromise; db.transaction(storeName, "readwrite").objectStore(storeName).clear(); }
+        };
+
+        const uploadIds = ['inpaintWorkflowUpload'];
+
+        const sections = [
+            {
+                gridId: 'replaceGrid',
+                items: [
+                    { id: 'r1', cols: 'cols-3', title: '示例 01：服装/材质重绘', labels: ['ORIGINAL | 原视频', 'MASK | 遮罩图', 'RESULT | 替换结果'] },
+                    { id: 'r2', cols: 'cols-3', title: '示例 02：环境气候改变', labels: ['ORIGINAL | 晴天', 'PROMPT | 提示词驱动', 'RESULT | 雨雪场景'] }
+                ]
+            },
+            {
+                gridId: 'removalGrid',
+                items: [
+                    { id: 'm1', cols: 'cols-3', title: '示例 01：路人/杂物消除', labels: ['ORIGINAL | 杂乱场景', 'MASK | 消除区域', 'RESULT | 干净背景'] }
+                ]
+            }
+        ];
+
+        function renderAllSections() {
+            sections.forEach(sec => {
+                const grid = document.getElementById(sec.gridId);
+                sec.items.forEach(item => {
+                    const container = document.createElement('div');
+                    container.className = 'example-item';
+                    
+                    let mediaHtml = '';
+                    item.labels.forEach((label, index) => {
+                        const areaId = `${item.id}_${index}`;
+                        uploadIds.push(areaId + 'Upload');
+                        const isResult = label.includes('RESULT');
+                        
+                        mediaHtml += `
+                            <div class="media-wrapper">
+                                <span class="media-label" style="${isResult ? 'background:linear-gradient(90deg, #22d3ee, #06b6d4)' : ''}">${label}</span>
+                                <div class="upload-area small" id="${areaId}Upload">
+                                    <span>${label.includes('VIDEO') || label.includes('RESULT') || label.includes('ORIGINAL') ? '🎬' : '🖼️'}</span>
+                                    <input type="file" id="${areaId}File" hidden accept="video/*,image/*">
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    container.innerHTML = `
+                        <div class="example-header">${item.title}</div>
+                        <div class="media-sequence ${item.cols}">${mediaHtml}</div>
+                    `;
+                    grid.appendChild(container);
+                });
+            });
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            const v = document.getElementById('modalVideo');
+            modal.classList.remove('active');
+            v.pause(); v.src = "";
+        }
+
+        function showModal(url, isVideo) {
+            const modal = document.getElementById('modal');
+            const mImg = document.getElementById('modalImg');
+            const mVideo = document.getElementById('modalVideo');
+            if (isVideo) {
+                mImg.style.display = "none"; mVideo.style.display = "block"; mVideo.src = url;
+            } else {
+                mVideo.style.display = "none"; mImg.style.display = "block"; mImg.src = url;
+            }
+            modal.classList.add('active');
+        }
+
+        function renderMedia(area, url) {
+            area.classList.add('has-image');
+            const isVideo = url.startsWith('data:video') || url.includes('video');
+            
+            if (isVideo) {
+                area.innerHTML = `<video src="${url}" class="preview-video" autoplay loop muted playsinline></video>`;
+                area.querySelector('video').onclick = (e) => { e.stopPropagation(); showModal(url, true); };
+            } else {
+                area.innerHTML = `<img src="${url}" class="preview-img">`;
+                area.querySelector('img').onclick = (e) => { e.stopPropagation(); showModal(url, false); };
+            }
+        }
+
+        async function handleFile(file, area, key) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = async (e) => {
+                const base64 = e.target.result;
+                renderMedia(area, base64);
+                await mediaDB.set(key, base64);
+            };
+        }
+
+        function initUpload(areaId) {
+            const area = document.getElementById(areaId);
+            const input = document.getElementById(areaId.replace('Upload', 'File'));
+            if(!area || !input) return;
+            area.addEventListener('click', () => { if (!area.classList.contains('has-image')) input.click(); });
+            input.addEventListener('change', e => handleFile(e.target.files[0], area, areaId));
+            area.addEventListener('dragover', e => { e.preventDefault(); area.classList.add('drag-over'); });
+            area.addEventListener('dragleave', () => area.classList.remove('drag-over'));
+            area.addEventListener('drop', e => {
+                e.preventDefault(); area.classList.remove('drag-over');
+                handleFile(e.dataTransfer.files[0], area, areaId);
+            });
+        }
+
+        async function restoreMedia(key) {
+            const area = document.getElementById(key);
+            const data = await mediaDB.get(key);
+            if (data && area) renderMedia(area, data);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderAllSections();
+            uploadIds.forEach(id => {
+                initUpload(id);
+                restoreMedia(id);
+            });
+            document.getElementById('clearAllBtn').onclick = async () => {
+                if(confirm('确定清空所有本地 Inpaint 预览数据吗？')) { await mediaDB.clear(); location.reload(); }
+            };
+        });
+    </script>
+</body>
+</html>

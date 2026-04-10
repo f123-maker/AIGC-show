@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WanVideo 深度工作流演示 - 范建斌</title>
+    <style>
+        /* ============================================================
+           核心视觉升级：深邃星空 + 极客蓝 + 玻璃拟态
+           ============================================================ */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Inter", "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif; }
+
+        body {
+            background-color: #020617; 
+            color: #f1f5f9;
+            padding: 40px 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            line-height: 1.6;
+            background-image: radial-gradient(circle at 50% -20%, #1e293b 0%, #020617 80%);
+        }
+
+        /* 简历卡片 */
+        .resume-card {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 32px;
+            padding: 48px;
+            margin-bottom: 50px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+        }
+
+        .resume-card h1 {
+            font-size: 42px;
+            background: linear-gradient(90deg, #38bdf8, #818cf8, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+            letter-spacing: -1px;
+        }
+
+        .base-info { font-size: 17px; color: #94a3b8; margin-top: 15px; font-weight: 300; }
+
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px; border-radius: 50px;
+            text-decoration: none; font-weight: 600; background: rgba(56, 189, 248, 0.05); 
+            color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.2); transition: 0.4s;
+            font-size: 14px;
+        }
+        .back-btn:hover { background: rgba(56, 189, 248, 0.2); transform: translateX(-5px); }
+
+        .section-title { font-size: 26px; font-weight: 800; margin-bottom: 30px; display: flex; align-items: center; gap: 12px; color: #f8fafc; }
+        .section-title::before { content: ""; width: 4px; height: 28px; background: linear-gradient(#38bdf8, #818cf8); border-radius: 4px; }
+
+        /* ============================================================
+           核心设置：统一 3:4 三格对等布局
+           ============================================================ */
+        .main-container {
+            background: rgba(15, 23, 42, 0.3);
+            border-radius: 32px;
+            padding: 48px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            margin-bottom: 40px;
+        }
+
+        .examples-grid { display: grid; grid-template-columns: 1fr; gap: 56px; }
+        
+        .example-card { 
+            background: rgba(30, 41, 59, 0.2); 
+            border-radius: 28px; 
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: 0.3s ease;
+        }
+        .example-card:hover { border-color: rgba(56, 189, 248, 0.4); background: rgba(30, 41, 59, 0.3); }
+
+        .example-images { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 16px; 
+        }
+
+        .example-img-wrapper { 
+            position: relative; 
+            width: 100%; 
+            aspect-ratio: 3 / 4; 
+            border-radius: 20px;
+            overflow: hidden;
+            background: #000;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: zoom-in;
+        }
+
+        .example-img-wrapper img, 
+        .example-img-wrapper video { 
+            width: 100%; height: 100%; object-fit: cover; display: block;
+        }
+
+        .result-wrapper { border: 2px solid #38bdf8; box-shadow: 0 0 30px rgba(56, 189, 248, 0.15); }
+        
+        .example-label { 
+            position: absolute; top: 16px; left: 16px; 
+            background: rgba(15, 23, 42, 0.8); 
+            backdrop-filter: blur(8px);
+            color: #fff; padding: 6px 14px; border-radius: 10px; font-size: 11px; 
+            font-weight: 800; z-index: 10; border: 1px solid rgba(255, 255, 255, 0.15);
+            letter-spacing: 0.5px;
+        }
+
+        .result-label { background: linear-gradient(135deg, #0ea5e9, #6366f1); border: none; }
+
+        .example-info { margin-top: 28px; }
+        .example-style { font-size: 20px; font-weight: 700; color: #f8fafc; margin-bottom: 10px; }
+        .example-desc { font-size: 15px; color: #94a3b8; line-height: 1.7; font-weight: 300; }
+
+        /* ============================================================
+           更多作品链接区域
+           ============================================================ */
+        .more-works-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.6) 100%);
+            border-radius: 32px; padding: 60px 40px; text-align: center; border: 1px solid rgba(56, 189, 248, 0.15);
+        }
+        .view-more-btn {
+            display: inline-flex; align-items: center; gap: 12px; padding: 18px 48px;
+            background: linear-gradient(90deg, #0ea5e9, #6366f1); color: #ffffff;
+            text-decoration: none; border-radius: 50px; font-weight: 700; font-size: 18px;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 10px 30px rgba(14, 165, 233, 0.3);
+        }
+        .view-more-btn:hover { transform: scale(1.05) translateY(-5px); box-shadow: 0 15px 40px rgba(14, 165, 233, 0.5); }
+
+        /* 预览弹窗 */
+        .img-preview-modal { position: fixed; inset: 0; background: rgba(2, 6, 23, 0.98); backdrop-filter: blur(20px); display: none; align-items: center; justify-content: center; z-index: 9999; cursor: zoom-out; }
+        .img-preview-modal.active { display: flex; }
+        .modal-media { max-width: 95%; max-height: 90%; border-radius: 16px; box-shadow: 0 0 100px rgba(0,0,0,0.5); }
+
+        @media (max-width: 768px) { .example-images { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="resume-card">
+        <h1>范建斌 | WanVideo AIGC 首席架构师</h1>
+        <p class="base-info">28岁 | 广州 | 计算机技术硕士 | 专注极高保真视频流重构方案</p>
+        <hr style="border:none; border-top:1px solid rgba(56, 189, 248, 0.1); margin:30px 0;">
+        <ul style="list-style:none; display:flex; gap:12px; flex-wrap:wrap;">
+            <li style="background:rgba(56,189,248,0.1); color:#38bdf8; padding:8px 18px; border-radius:10px; font-size:13px; font-weight:600;">⚡ 时序骨架动力学引导</li>
+            <li style="background:rgba(129,140,248,0.1); color:#818cf8; padding:8px 18px; border-radius:10px; font-size:13px; font-weight:600;">👤 零样本角色特征迁移</li>
+            <li style="background:rgba(52,211,153,0.1); color:#34d399; padding:8px 18px; border-radius:10px; font-size:13px; font-weight:600;">🎭 SAM 3 像素级语义分割</li>
+        </ul>
+    </div>
+
+    <div class="main-container">
+        <div class="page-header" style="margin-bottom: 40px;">
+            <a href="index.html" class="back-btn">← 返回技术矩阵</a>
+        </div>
+
+        <h3 class="section-title">Animate-Pro 进阶工作流架构</h3>
+        <div class="workflow-display" style="margin-bottom: 56px;">
+            <div class="example-img-wrapper" style="aspect-ratio: 16/9; width: 100%; border-radius: 24px;" onclick="openPreview('workflow/wan-animate/workflow_main.png', false)">
+                <img src="workflow/wan-animate/workflow_main.png" alt="工作流" onerror="this.src='https://placehold.co/1200x600/0f172a/38bdf8?text=Animate+Advanced+Workflow+Preview'">
+            </div>
+            <p style="color:#94a3b8; font-size:15px; margin-top:20px; line-height:1.8; padding: 0 10px;">
+                <strong>核心技术栈：</strong> 方案基于 <strong>WanVideo 2.2 (14B)</strong> 算力底座，深度集成 <strong>Uni3C ControlNet</strong> 结构引力场。通过多路特征注入（Face+Pose+CLIP），在 高清分辨率下实现了极致的时序稳定性，支持长视频的动态运镜重绘。
+            </p>
+        </div>
+
+        <h3 class="section-title">核心生产力场景应用</h3>
+        <div class="examples-grid" id="examplesGrid">
+            <script>
+                const basePath = 'workflow/wan-animate/';
+                const scenes = [
+                    { id: 1, title: "跨维度动作重定向 (Motion Retargeting)", desc: "利用 ViTPose 捕获高频骨架序列，实现复杂舞蹈动作向任意异质角色 1:1 迁移，完美规避肢体闪烁现象。", p: "demo1" },
+                    { id: 2, title: "深层语义面部置换 (Face Swap Pro)", desc: "基于 ReActor 与 Wan-Animate 双引擎融合，实现极高保真度的特征置换，支持大角度转头下的面部几何一致性。", p: "demo2" },
+                    { id: 3, title: "IP 风格化语义重构 (Style Reconstruction)", desc: "配合 SAM 3 动态分割，在保持背景环境静止的前提下，将人物重构为粘土、国风或动漫 IP，确保动作流体感。", p: "demo3" }
+                ];
+
+                scenes.forEach(s => {
+                    const imgSrc = `${basePath}${s.p}_src.png`;
+                    const videoCtrl = `${basePath}${s.p}_ctrl.mp4`;
+                    const videoRes = `${basePath}${s.p}_res.mp4`;
+
+                    document.write(`
+                        <div class="example-card">
+                            <div class="example-images">
+                                <div class="example-img-wrapper" onclick="openPreview('${imgSrc}', false)">
+                                    <span class="example-label">静态基准</span>
+                                    <img src="${imgSrc}" onerror="this.src='https://placehold.co/600x800/1e293b/475569?text=Source+Ref'">
+                                </div>
+                                <div class="example-img-wrapper" onclick="openPreview('${videoCtrl}', true)">
+                                    <span class="example-label">时序动力引导</span>
+                                    <video src="${videoCtrl}" muted loop autoplay playsinline></video>
+                                </div>
+                                <div class="example-img-wrapper result-wrapper" onclick="openPreview('${videoRes}', true)">
+                                    <span class="example-label result-label">AI 最终重绘</span>
+                                    <video src="${videoRes}" muted loop autoplay playsinline></video>
+                                </div>
+                            </div>
+                            <div class="example-info">
+                                <div class="example-style">${s.id}. ${s.title}</div>
+                                <div class="example-desc">${s.desc}</div>
+                            </div>
+                        </div>
+                    `);
+                });
+            </script>
+        </div>
+    </div>
+
+    <div class="main-container more-works-section" style="border: none; background: transparent; padding: 0;">
+        <div class="more-works-card">
+            <h3 class="section-title" style="justify-content: center; margin-bottom: 20px;">探索更多 AIGC 视觉实验</h3>
+            <p style="color: #94a3b8; font-size: 16px; margin-bottom: 40px; max-width: 800px; margin-left: auto; margin-right: auto;">
+                从《画江湖之不良人》的国风重构到超现实主义数字生命实验，我将完整的工作流参数与创作逻辑同步至小红书平台。点击下方链接，见证 AIGC 与艺术的边界碰撞。
+            </p>
+            <a href="https://www.xiaohongshu.com/user/profile/647343a9000000001f004d74" target="_blank" class="view-more-btn">
+                <span>🚀 访问全量 AIGC 二创作品集</span>
+            </a>
+        </div>
+    </div>
+
+    <footer style="text-align:center; color:#475569; font-size:14px; padding:60px; font-weight: 500;">
+        © 2026 范建斌 | ComfyUI AIGC Senior Engineer | 广州·数字创意基地
+    </footer>
+
+    <div class="img-preview-modal" id="modal" onclick="closeModal()">
+        <img id="modalImg" src="" class="modal-media" style="display:none;">
+        <video id="modalVideo" controls autoplay loop class="modal-media" style="display:none;"></video>
+    </div>
+
+    <script>
+        function openPreview(url, isVideo) {
+            const modal = document.getElementById('modal');
+            const mImg = document.getElementById('modalImg');
+            const mVideo = document.getElementById('modalVideo');
+            modal.classList.add('active');
+            if (isVideo) {
+                mImg.style.display = "none"; mVideo.style.display = "block"; mVideo.src = url;
+            } else {
+                mVideo.style.display = "none"; mImg.style.display = "block"; mImg.src = url;
+            }
+        }
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            const v = document.getElementById('modalVideo');
+            modal.classList.remove('active'); v.pause(); v.src = "";
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人物编辑/重绘专项 - 范建斌 | ComfyUI AIGC工程师</title>
+    <style>
+        /* ============================================================
+           核心一致性样式
+           ============================================================ */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Inter", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif; }
+
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 32px 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .resume-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .resume-card h1 {
+            font-size: 32px;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .main-container {
+            background: rgba(30, 41, 59, 0.3);
+            border-radius: 24px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .page-header { display: flex; align-items: center; gap: 20px; margin-bottom: 40px; }
+
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px; border-radius: 50px;
+            text-decoration: none; font-weight: 600; background: rgba(255, 255, 255, 0.05); color: #60a5fa; border: 1px solid rgba(96, 165, 250, 0.3); transition: 0.3s;
+        }
+        .back-btn:hover { background: #2563eb; color: #ffffff; transform: translateX(-5px); }
+
+        .section-title { font-size: 22px; font-weight: 700; color: #ffffff; margin-bottom: 24px; padding-left: 15px; border-left: 4px solid #a78bfa; }
+
+        .workflow-card { background: rgba(15, 23, 42, 0.3); border-radius: 20px; padding: 30px; border: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 24px; }
+        .img-display-area {
+            width: 100%; background: #0f172a; border-radius: 16px; overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1); cursor: zoom-in;
+        }
+        .img-display-area img { width: 100%; height: auto; display: block; }
+
+        .feature-block {
+            background: rgba(15, 23, 42, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 64px;
+        }
+        
+        .demo-group { margin-top: 30px; display: grid; grid-template-columns: 1fr; gap: 24px; }
+        .example-images { display: grid; gap: 2px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; overflow: hidden; }
+        .example-img-wrapper { position: relative; width: 100%; aspect-ratio: 1; background: rgba(15, 23, 42, 0.6); overflow: hidden; }
+        .example-img-wrapper img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
+        .example-label { position: absolute; top: 10px; left: 10px; background: rgba(15, 23, 42, 0.85); color: #a78bfa; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; z-index: 10; border: 1px solid rgba(167, 139, 250, 0.2); }
+
+        .feature-desc { margin-top: 20px; color: #94a3b8; font-size: 14px; line-height: 1.8; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px; }
+        .tech-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; background: rgba(96, 165, 250, 0.1); color: #60a5fa; font-size: 12px; margin-right: 6px; margin-bottom: 6px; border: 1px solid rgba(96, 165, 250, 0.2); }
+
+        .img-preview-modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 9999; cursor: zoom-out; }
+        .img-preview-modal.active { display: flex; }
+        .img-preview-img { max-width: 90%; max-height: 90%; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
+
+        @media (max-width: 768px) { .demo-group { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="resume-card">
+        <h1>范建斌 | ComfyUI AIGC工程师</h1>
+        <p style="color:#94a3b8">基于扩散模型的人物语义编辑与高保真重绘专项作品集</p>
+    </div>
+
+    <div class="main-container">
+        <div class="page-header">
+            <a href="index.html" class="back-btn">← 返回首页</a>
+            <h2 style="font-size: 28px; font-weight: 700; color: #ffffff;">人物编辑项目详情</h2>
+        </div>
+
+        <div id="featureContainer">
+            <script>
+                const basePath = 'workflow/character-edit/';
+                const features = [
+                    {
+                        title: "01. Qwen-2511 语义级高保真人脸置换",
+                        workflow: "workflow_faceswap.png",
+                        tags: ["Qwen-Image-Edit-2511", "BiRefNet", "Lightning-4Step"],
+                        desc: "<strong>方案突破：</strong>摒弃传统的像素贴图换脸，采用 Qwen-2511 语义重绘逻辑。通过 <code>head_swap</code> 指令精确置换目标特征，同时强制继承原图的光影氛围与空间深度。结合 BiRefNet 实现发丝级掩码扣像，支持 4-Step 闪电生成，兼顾实时性与极致写实感。",
+                        grid: 3,
+                        images: [
+                            { label: "环境底图 (Base)", file: "swap_orig.png" },
+                            { label: "目标特征 (Face)", file: "swap_ref.png" },
+                            { label: "置换结果 (Result)", file: "swap_res.png" }
+                        ]
+                    },
+                    {
+                        title: "02. Flux-2-Klein 电商级潜空间换装方案",
+                        workflow: "workflow_tryon.png",
+                        tags: ["Flux-2-Klein (9B)", "ReferenceLatent", "Material Fidelity"],
+                        desc: "<strong>方案突破：</strong>针对电商模特图与服饰素材质感不统一的痛点，采用 Flux-2-Klein 高性能架构。核心利用 <code>ReferenceLatent</code> 在潜空间直接引用服饰材质细节，确保衣物褶皱、面料纹理在不同模特形态下自然延展，解决了传统扩散模型重绘中“面料变质”的行业难题。",
+                        grid: 3,
+                        images: [
+                            { label: "模特底图", file: "tryon_orig.png" },
+                            { label: "参考单品", file: "tryon_ref.png" },
+                            { label: "上身效果", file: "tryon_res.png" }
+                        ]
+                    },
+                    {
+                        title: "03. 物理级 3D 可视化控光与重打光",
+                        workflow: "workflow_light.png",
+                        tags: ["Azimuth/Elevation Control", "Remap LoRA", "Cinematic Relight"],
+                        desc: "<strong>方案突破：</strong>通过构建可视化灯光矩阵，实现了对 2D 图像的 3D 物理级光效编辑。支持对方位角、俯仰角、光源强度进行数值化调节。结合 <code>Remap LoRA</code> 强化暗部细节，模拟真实的影棚布光逻辑，实现从平淡原片到电影级质感的瞬间重塑。",
+                        grid: 3,
+                        images: [
+                            { label: "自然光原片", file: "light_orig.png" },
+                            { label: "侧逆光效果", file: "light_res1.png" },
+                            { label: "底部冷光效果", file: "light_res2.png" }
+                        ]
+                    },
+                    {
+                        title: "04. FireRed & SAM3 级联跨场景人物迁移",
+                        workflow: "workflow_transfer.png",
+                        tags: ["FireRed-1.1", "SAM3 + Florence2", "SDPose", "SeedVR2"],
+                        desc: "<strong>方案突破：</strong>这是一套极其精密的人物重绘链路。通过 Florence-2 与 SAM3 级联实现像素级自动分割，利用 SDPose 锁定角色姿态结构。后端接入 <code>FireRed-Image-Edit</code> 进行高精度重绘，最后由 <code>SeedVR2</code> 视频级超分算法修复面部微纹理，完美解决复杂背景下的人物二创与迁移需求。",
+                        grid: 4,
+                        images: [
+                            { label: "角色原图", file: "trans_orig.png" },
+                            { label: "目标场景", file: "trans_ref1.png" },
+                            { label: "姿态提取", file: "trans_ref2.png" },
+                            { label: "高保真结果", file: "trans_res.png" }
+                        ]
+                    }
+                ];
+
+                features.forEach(f => {
+                    let tagsHtml = f.tags.map(t => `<span class="tech-tag">${t}</span>`).join('');
+                    let imagesHtml = '';
+                    f.images.forEach(img => {
+                        const fullPath = `${basePath}${img.file}`;
+                        imagesHtml += `
+                            <div class="example-img-wrapper">
+                                <span class="example-label">${img.label}</span>
+                                <img src="${fullPath}" onclick="openPreview('${fullPath}')" onerror="this.src='https://placehold.co/400x400/0f172a/475569?text=${img.label}'">
+                            </div>
+                        `;
+                    });
+
+                    document.write(`
+                        <div class="feature-block">
+                            <h3 class="section-title">${f.title}</h3>
+                            <div style="margin-bottom: 15px;">${tagsHtml}</div>
+                            <div class="workflow-card">
+                                <div class="img-display-area" onclick="openPreview('${basePath}${f.workflow}')">
+                                    <img src="${basePath}${f.workflow}" alt="工作流" onerror="this.src='https://placehold.co/1200x400/1e293b/64748b?text=Workflow+Image'">
+                                </div>
+                            </div>
+                            <div class="demo-group">
+                                <div class="example-images" style="grid-template-columns: repeat(${f.grid}, 1fr);">
+                                    ${imagesHtml}
+                                </div>
+                            </div>
+                            <p class="feature-desc">${f.desc}</p>
+                        </div>
+                    `);
+                });
+            </script>
+        </div>
+    </div>
+
+    <footer style="text-align:center; color:#64748b; font-size:14px; padding:48px;">© 2026 范建斌 | ComfyUI AIGC工程师 | 基于 JSON 工作流实测效果展示</footer>
+
+    <div class="img-preview-modal" id="modal" onclick="this.classList.remove('active')">
+        <img src="" id="modalImg" class="img-preview-img">
+    </div>
+
+    <script>
+        function openPreview(url) {
+            const modal = document.getElementById('modal');
+            const modalImg = document.getElementById('modalImg');
+            modalImg.src = url;
+            modal.classList.add('active');
+        }
+    </script>
+</body>
+</html>

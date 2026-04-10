@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首尾帧视频生成 - 范建斌 | ComfyUI AIGC工程师</title>
+    <style>
+        /* ============================================================
+           核心一致性样式 (保留万相专属绿色调)
+           ============================================================ */
+        :root {
+            --primary-accent: #10b981; 
+            --secondary-accent: #34d399;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --border-glow: rgba(16, 185, 129, 0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Inter", "PingFang SC", system-ui, sans-serif; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #f8fafc;
+            padding: 40px 20px;
+            max-width: 1400px; 
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .resume-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 32px;
+            margin-bottom: 40px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        .resume-card h1 {
+            font-size: 32px;
+            background: linear-gradient(90deg, var(--primary-accent), var(--secondary-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+            font-weight: 800;
+        }
+
+        .main-container {
+            background: rgba(30, 41, 59, 0.3);
+            border-radius: 28px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 40px 0 24px;
+            display: flex;
+            align-items: center; gap: 12px;
+        }
+
+        .section-title::before {
+            content: ""; width: 4px; height: 20px;
+            background: var(--primary-accent); border-radius: 10px;
+        }
+
+        /* 静态展示区域样式 */
+        .img-display-area {
+            width: 100%; border-radius: 20px; overflow: hidden;
+            border: 1px solid var(--border-glow); background: #000;
+            cursor: zoom-in; transition: 0.3s;
+        }
+        .img-display-area img { width: 100%; display: block; }
+
+        .example-grid { display: grid; gap: 40px; margin-bottom: 60px; }
+        .example-item {
+            background: rgba(30, 41, 59, 0.4); border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08); overflow: hidden; padding: 20px;
+        }
+
+        .example-header { font-size: 16px; font-weight: 700; color: var(--primary-accent); margin-bottom: 16px; }
+
+        .keyframes-sequence { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .key-wrapper {
+            position: relative; background: #1e293b; aspect-ratio: 16 / 9;
+            border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);
+            cursor: zoom-in;
+        }
+        .key-wrapper img, .key-wrapper video { width: 100%; height: 100%; object-fit: cover; }
+
+        .key-label {
+            position: absolute; top: 10px; left: 10px; background: rgba(15, 23, 42, 0.8);
+            color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 11px;
+            font-weight: 700; z-index: 10; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(4px);
+        }
+
+        .page-header { display: flex; align-items: center; margin-bottom: 40px; }
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px;
+            border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 14px;
+            background: rgba(255, 255, 255, 0.05); color: var(--secondary-accent); 
+            border: 1px solid rgba(16, 185, 129, 0.3); transition: 0.3s;
+        }
+        .back-btn:hover { background: var(--primary-accent); color: #fff; transform: translateX(-5px); }
+
+        /* 弹窗样式 */
+        .img-preview-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(20px); display: none; align-items: center; justify-content: center; z-index: 9999; cursor: zoom-out; }
+        .img-preview-modal.active { display: flex; }
+        .modal-media { max-width: 95%; max-height: 90%; object-fit: contain; border-radius: 8px; }
+
+        @media (max-width: 768px) { .keyframes-sequence { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="resume-card">
+        <h1>范建斌 | ComfyUI AIGC工程师</h1>
+        <p class="base-info">28岁 | 广州 | 计算机技术硕士 | WanVideo (万相) 专项工作流</p>
+        <hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:20px 0;">
+        <ul style="list-style:none; font-size:14px; color:#cbd5e1; display:flex; gap:20px; flex-wrap:wrap;">
+            <li>🎯 首尾帧逻辑引导 (Keyframe-Guided)</li>
+            <li>🎬 电影级运镜生成 (Cinematic Motion)</li>
+            <li>🎞️ 物理动态一致性优化</li>
+        </ul>
+    </div>
+
+    <div class="main-container">
+        <div class="page-header">
+            <a href="index.html" class="back-btn">← 返回首页</a>
+        </div>
+
+        <h3 class="section-title">核心模块：万相首尾帧工作流 (Wan-Keyframe Workflow)</h3>
+        <div class="workflow-card" style="background:transparent; padding:0; border:none;">
+            <div class="img-display-area" onclick="openPreview('workflow/wan-keyframes/workflow_main.png', false)">
+                <img src="workflow/wan-keyframes/workflow_main.png" alt="工作流" onerror="this.src='https://placehold.co/1200x600/0f172a/10b981?text=Place+workflow_main.png+in+folder'">
+            </div>
+            <p style="color:#94a3b8; font-size:14px; margin-top:16px;">
+                <strong>核心逻辑：</strong>该工作流通过万相模型的 I2V 接口，同时注入起始帧与结束帧的潜空间特征。配合 Flow-Matching 算法，系统能自动计算中间动作的运动轨迹，确保视频生成的首尾连贯性。
+            </p>
+        </div>
+
+        <h3 class="section-title">生成示例展示 (Generation Cases)</h3>
+        <div class="example-grid" id="casesGrid">
+            <script>
+                const basePath = 'workflow/wan-keyframes/';
+                const cases = [
+                    { id: 1, title: "示例 01: 环境转场 - 森林到城市", p: "demo1" },
+                    { id: 2, title: "示例 02: 角色动作 - 拔剑起势", p: "demo2" },
+                    { id: 3, title: "示例 03: 运镜控制 - 环绕特写", p: "demo3" },
+                    { id: 4, title: "示例 04: 物理模拟 - 碎裂与重组", p: "demo4" }
+                ];
+
+                cases.forEach(c => {
+                    const imgStart = `${basePath}${c.p}_start.png`;
+                    const imgEnd = `${basePath}${c.p}_end.png`;
+                    const videoRes = `${basePath}${c.p}_video.mp4`;
+
+                    document.write(`
+                        <div class="example-item">
+                            <div class="example-header"><span>${c.title}</span></div>
+                            <div class="keyframes-sequence">
+                                <div class="key-wrapper" onclick="openPreview('${imgStart}', false)">
+                                    <span class="key-label" style="background:var(--primary-accent)">START | 首帧</span>
+                                    <img src="${imgStart}" onerror="this.src='https://placehold.co/400x225/1e293b/475569?text=Start+Frame'">
+                                </div>
+                                <div class="key-wrapper" onclick="openPreview('${imgEnd}', false)">
+                                    <span class="key-label" style="background:#3b82f6">END | 尾帧</span>
+                                    <img src="${imgEnd}" onerror="this.src='https://placehold.co/400x225/1e293b/475569?text=End+Frame'">
+                                </div>
+                                <div class="key-wrapper" style="border: 1px solid var(--primary-accent)" onclick="openPreview('${videoRes}', true)">
+                                    <span class="key-label" style="background:linear-gradient(90deg, #10b981, #3b82f6)">VIDEO | 结果</span>
+                                    <video src="${videoRes}" muted loop autoplay playsinline poster="https://placehold.co/400x225/0f172a/10b981?text=Video+Result"></video>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                });
+            </script>
+        </div>
+    </div>
+
+    <div class="img-preview-modal" id="modal" onclick="closeModal()">
+        <img id="modalImg" src="" class="modal-media" style="display:none;">
+        <video id="modalVideo" controls autoplay loop class="modal-media" style="display:none;"></video>
+    </div>
+
+    <script>
+        function openPreview(url, isVideo) {
+            const modal = document.getElementById('modal');
+            const mImg = document.getElementById('modalImg');
+            const mVideo = document.getElementById('modalVideo');
+
+            if (isVideo) {
+                mImg.style.display = "none";
+                mVideo.style.display = "block";
+                mVideo.src = url;
+            } else {
+                mVideo.style.display = "none";
+                mImg.style.display = "block";
+                mImg.src = url;
+            }
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            const v = document.getElementById('modalVideo');
+            modal.classList.remove('active');
+            v.pause();
+            v.src = "";
+        }
+    </script>
+</body>
+</html>

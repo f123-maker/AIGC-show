@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ControlNet 方案展示 - 范建斌</title>
+    <style>
+        /* 复用 style-transfer 的极简白卡片风格 */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Inter", system-ui, sans-serif; }
+        body { background-color: #f5f7fa; padding: 32px 20px; max-width: 1400px; margin: 0 auto; color: #111827; }
+
+        .resume-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 32px; margin-bottom: 40px; }
+        .resume-card h1 { font-size: 32px; margin-bottom: 12px; }
+        .base-info { color: #2563eb; margin-bottom: 16px; font-weight: 500; }
+        .intro-list { margin-left: 20px; margin-bottom: 24px; line-height: 1.8; color: #374151; }
+
+        .main-container { background: #fff; border-radius: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); padding: 32px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+        .section-title { font-size: 20px; font-weight: 700; margin-bottom: 24px; padding-left: 12px; border-left: 4px solid #2563eb; }
+
+        /* 工作流展示 */
+        .workflow-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 16px; padding: 24px; margin-bottom: 48px; }
+        .upload-area { 
+            width: 100%; background: #fff; border: 2px dashed #d1d5db; border-radius: 12px; 
+            min-height: 400px; display: flex; align-items: center; justify-content: center; cursor: pointer;
+            position: relative; overflow: hidden;
+        }
+        .upload-area.has-image { min-height: unset; border: none; }
+        .preview-img { width: 100%; display: block; cursor: zoom-in; }
+
+        /* 6个演示位网格 */
+        .examples-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+        .example-card { border: 1px solid #f0f0f0; border-radius: 16px; overflow: hidden; background: #fff; }
+        .example-images { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #e5e7eb; }
+        .img-slot { position: relative; aspect-ratio: 1; background: #f9fafb; }
+        .slot-label { position: absolute; top: 6px; left: 6px; background: rgba(0,0,0,0.6); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; z-index: 5; }
+        
+        .upload-area.small { min-height: unset; height: 100%; border-radius: 0; }
+        .example-info { padding: 16px; }
+        .mode-title { font-weight: 700; margin-bottom: 4px; color: #111827; }
+        .mode-desc { font-size: 13px; color: #6b7280; line-height: 1.4; }
+
+        .file-input { display: none; }
+        .clear-btn { background: #fef2f2; color: #dc2626; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; font-weight: 500; }
+        
+        /* 弹窗 */
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:none; align-items:center; justify-content:center; z-index:100; }
+        .modal.active { display:flex; }
+        .modal img { max-width:90%; max-height:90%; }
+    </style>
+</head>
+<body>
+    <div class="resume-card">
+        <h1>范建斌 | ComfyUI AIGC工程师</h1>
+        <p class="base-info">计算机技术硕士 | 专注 ControlNet 精准控制方案</p>
+        <hr style="border:none; border-top:1px solid #e5e7eb; margin-bottom:20px;">
+        <ul class="intro-list">
+            <li>研发基于 **AIO Aux Preprocessor** 的“6合1”集成工作流，支持一键切换核心控制模式；</li>
+            <li>深度整合 Canny、DWPose、DepthAnythingV2 等模型，实现工业级图像引导；</li>
+            <li>优化 ComfyUI 逻辑架构，提升多条件并行生成的稳定性与效率。</li>
+        </ul>
+    </div>
+
+    <div class="main-container">
+        <div class="page-header">
+            <h2 style="font-size: 24px;">ControlNet 6合1 方案演示</h2>
+            <button class="clear-btn" id="clearAllBtn">🗑️ 清空图片</button>
+        </div>
+
+        <h3 class="section-title">ComfyUI 6合1 节点架构</h3>
+        <div class="workflow-card">
+            <div class="upload-area" id="workflowUpload">
+                <span>🔗 点击上传工作流截图 (包含 Canny/DWPose/Depth 等)</span>
+                <input type="file" class="file-input" id="workflowFile" accept="image/*">
+            </div>
+        </div>
+
+        <h3 class="section-title">模式效果预览</h3>
+        <div class="examples-grid">
+            <div class="example-card">
+                <div class="example-images">
+                    <div class="img-slot"><span class="slot-label">原图</span><div class="upload-area small" id="o1Upload"><input type="file" class="file-input" id="o1File"></div></div>
+                    <div class="img-slot"><span class="slot-label">Canny</span><div class="upload-area small" id="p1Upload"><input type="file" class="file-input" id="p1File"></div></div>
+                    <div class="img-slot"><span class="slot-label">结果</span><div class="upload-area small" id="r1Upload"><input type="file" class="file-input" id="r1File"></div></div>
+                </div>
+                <div class="example-info"><div class="mode-title">01. CannyEdge (边缘检测)</div><div class="mode-desc">高保真提取轮廓，适合物体结构精确还原。</div></div>
+            </div>
+
+            <div class="example-card">
+                <div class="example-images">
+                    <div class="img-slot"><span class="slot-label">原图</span><div class="upload-area small" id="o2Upload"><input type="file" class="file-input" id="o2File"></div></div>
+                    <div class="img-slot"><span class="slot-label">DWPose</span><div class="upload-area small" id="p2Upload"><input type="file" class="file-input" id="p2File"></div></div>
+                    <div class="img-slot"><span class="slot-label">结果</span><div class="upload-area small" id="r2Upload"><input type="file" class="file-input" id="r2File"></div></div>
+                </div>
+                <div class="example-info"><div class="mode-title">02. DWPreprocessor (全身姿态)</div><div class="mode-desc">精准捕捉人体骨架与手部细节，实现动作迁移。</div></div>
+            </div>
+
+            <div class="example-card">
+                <div class="example-images">
+                    <div class="img-slot"><span class="slot-label">原图</span><div class="upload-area small" id="o3Upload"><input type="file" class="file-input" id="o3File"></div></div>
+                    <div class="img-slot"><span class="slot-label">DepthV2</span><div class="upload-area small" id="p3Upload"><input type="file" class="file-input" id="p3File"></div></div>
+                    <div class="img-slot"><span class="slot-label">结果</span><div class="upload-area small" id="r3Upload"><input type="file" class="file-input" id="r3File"></div></div>
+                </div>
+                <div class="example-info"><div class="mode-title">03. DepthAnythingV2 (深度映射)</div><div class="mode-desc">基于最新 V2 模型，提供极具层次感的空间引导。</div></div>
+            </div>
+
+            <div class="example-card">
+                <div class="example-images">
+                    <div class="img-slot"><span class="slot-label">原图</span><div class="upload-area small" id="o4Upload"><input type="file" class="file-input" id="o4File"></div></div>
+                    <div class="img-slot"><span class="slot-label">M-LSD</span><div class="upload-area small" id="p4Upload"><input type="file" class="file-input" id="p4File"></div></div>
+                    <div class="img-slot"><span class="slot-label">结果</span><div class="upload-area small" id="r4Upload"><input type="file" class="file-input" id="r4File"></div></div>
+                </div>
+                <div class="example-info"><div class="mode-title">04. M-LSD (直线检测)</div><div class="mode-desc">过滤杂乱线条，专注建筑或室内直线结构。</div></div>
+            </div>
+
+            <div class="example-card">
+                <div class="example-images">
+                    <div class="img-slot"><span class="slot-label">原图</span><div class="upload-area small" id="o5Upload"><input type="file" class="file-input" id="o5File"></div></div>
+                    <div class="img-slot"><span class="slot-label">LineArt</span><div class="upload-area small" id="p5Upload"><input type="file" class="file-input" id="p5File"></div></div>
+                    <div class="img-slot"><span class="slot-label">结果</span><div class="upload-area small" id="r5Upload"><input type="file" class="file-input" id="r5File"></div></div>
+                </div>
+                <div class="example-info"><div class="mode-title">05. LineArt (艺术线稿)</div><div class="mode-desc">提取具有艺术感的笔触线稿，适合风格化创作。</div></div>
+            </div>
+
+            <div class="example-card">
+                <div class="example-images">
+                    <div class="img-slot"><span class="slot-label">原图</span><div class="upload-area small" id="o6Upload"><input type="file" class="file-input" id="o6File"></div></div>
+                    <div class="img-slot"><span class="slot-label">HED/Soft</span><div class="upload-area small" id="p6Upload"><input type="file" class="file-input" id="p6File"></div></div>
+                    <div class="img-slot"><span class="slot-label">结果</span><div class="upload-area small" id="r6Upload"><input type="file" class="file-input" id="r6File"></div></div>
+                </div>
+                <div class="example-info"><div class="mode-title">06. HED (柔和边缘控制)</div><div class="mode-desc">保留柔和边缘细节，使生成结果更加自然融合。</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal"><img id="modalImg"></div>
+
+    <script>
+        const ids = ['workflow'];
+        for(let i=1;i<=6;i++) ids.push(`o${i}`, `p${i}`, `r${i}`);
+
+        const dbName = "ControlNet_6AIO_DB";
+        let db;
+        const request = indexedDB.open(dbName, 1);
+        request.onupgradeneeded = e => e.target.result.createObjectStore("images");
+        request.onsuccess = e => { 
+            db = e.target.result; 
+            ids.forEach(id => restore(id));
+            init();
+        };
+
+        function init() {
+            ids.forEach(id => {
+                const area = document.getElementById(id+'Upload');
+                const input = document.getElementById(id+'File');
+                if(!area || !input) return;
+                area.onclick = () => !area.classList.contains('has-image') && input.click();
+                input.onchange = e => {
+                    const file = e.target.files[0];
+                    if(!file) return;
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => {
+                        render(id, reader.result);
+                        db.transaction("images", "readwrite").objectStore("images").put(reader.result, id);
+                    };
+                };
+            });
+            document.getElementById('modal').onclick = e => e.currentTarget.classList.remove('active');
+            document.getElementById('clearAllBtn').onclick = () => {
+                if(confirm('清空所有演示图？')) {
+                    db.transaction("images", "readwrite").objectStore("images").clear();
+                    location.reload();
+                }
+            };
+        }
+
+        function render(id, url) {
+            const area = document.getElementById(id+'Upload');
+            area.innerHTML = `<img src="${url}" class="preview-img">`;
+            area.classList.add('has-image');
+            area.querySelector('img').onclick = e => {
+                e.stopPropagation();
+                document.getElementById('modalImg').src = url;
+                document.getElementById('modal').classList.add('active');
+            };
+        }
+
+        function restore(id) {
+            const req = db.transaction("images", "readonly").objectStore("images").get(id);
+            req.onsuccess = () => req.result && render(id, req.result);
+        }
+    </script>
+</body>
+</html>

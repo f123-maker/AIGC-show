@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图像放大修复 - 范建斌 | ComfyUI AIGC工程师</title>
+    <style>
+        /* ============================================================
+           核心一致性样式：保留原有深色科技感视觉
+           ============================================================ */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Inter", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif; }
+
+        body {
+            background-color: #0f172a; 
+            color: #f8fafc;
+            padding: 32px 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .resume-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .resume-card h1 {
+            font-size: 32px;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+            font-weight: 800;
+        }
+
+        .base-info { font-size: 16px; color: #94a3b8; margin-bottom: 16px; letter-spacing: 0.5px; }
+        .resume-card hr { border: none; border-top: 1px solid rgba(255, 255, 255, 0.1); margin: 20px 0; }
+
+        .intro-list { margin-left: 20px; margin-bottom: 24px; color: #cbd5e1; font-size: 15px; }
+        .intro-list li { margin-bottom: 8px; }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 12px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .main-container {
+            background: rgba(30, 41, 59, 0.3);
+            border-radius: 24px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-left { display: flex; align-items: center; gap: 20px; }
+        .page-title { font-size: 28px; font-weight: 700; color: #ffffff; }
+
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(255, 255, 255, 0.05); color: #60a5fa;
+            padding: 10px 24px; border-radius: 50px; text-decoration: none;
+            font-weight: 600; border: 1px solid rgba(96, 165, 250, 0.3); transition: 0.3s;
+        }
+        .back-btn:hover { background: #2563eb; color: #ffffff; transform: translateX(-5px); }
+
+        .section-title {
+            font-size: 22px; font-weight: 700; color: #ffffff;
+            margin-bottom: 24px; padding-left: 15px; border-left: 4px solid #60a5fa;
+        }
+
+        /* 布局卡片 */
+        .workflow-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 24px; margin-bottom: 48px; }
+        .workflow-card { background: rgba(15, 23, 42, 0.3); border-radius: 20px; padding: 24px; border: 1px solid rgba(255, 255, 255, 0.05); }
+
+        /* 图片展示区域 */
+        .img-static-area {
+            width: 100%; background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px;
+            overflow: hidden; cursor: zoom-in; transition: 0.3s;
+        }
+        .img-static-area:hover { border-color: #60a5fa; }
+        .img-static-area img { width: 100%; display: block; }
+        
+        /* 局部放大效果保留 */
+        .workflow-card .img-static-area img { 
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: center;
+        }
+        .workflow-card .img-static-area:hover img { transform: scale(1.1); }
+        
+        /* 三栏展示 */
+        .example-images { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; background: rgba(255, 255, 255, 0.05); }
+        .example-img-wrapper { position: relative; width: 100%; aspect-ratio: 1; background: rgba(15, 23, 42, 0.6); overflow: hidden; }
+        .example-img-wrapper img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
+
+        .example-label {
+            position: absolute; top: 6px; left: 6px; z-index: 20;
+            background: rgba(15, 23, 42, 0.85); color: #60a5fa;
+            padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700;
+            border: 1px solid rgba(96, 165, 250, 0.2); pointer-events: none;
+        }
+
+        .workflow-desc { margin-top: 16px; color: #94a3b8; font-size: 14px; line-height: 1.6; }
+
+        .examples-grid { display: grid; grid-template-columns: 1fr; gap: 32px; }
+        @media (min-width: 1200px) { .examples-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        .example-card { background: rgba(30, 41, 59, 0.4); border-radius: 20px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.05); transition: 0.4s; }
+        .example-card:hover { transform: translateY(-8px); border-color: rgba(96, 165, 250, 0.3); }
+
+        .example-info { padding: 24px; }
+        .example-type { font-size: 18px; font-weight: 700; color: #ffffff; margin-bottom: 8px; }
+        .example-desc { font-size: 14px; color: #94a3b8; line-height: 1.6; }
+
+        .footer { text-align: center; padding: 48px; color: #64748b; font-size: 14px; }
+
+        .img-preview-modal {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px);
+            display: none; align-items: center; justify-content: center; z-index: 9999; cursor: zoom-out;
+        }
+        .img-preview-modal.active { display: flex; }
+        .img-preview-img { max-width: 90%; max-height: 90%; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
+
+        @media (max-width: 600px) { .workflow-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="resume-card">
+        <h1>范建斌 | ComfyUI AIGC工程师</h1>
+        <p class="base-info">28岁 | 广州 | 计算机技术硕士 | 图像处理/机器学习/AIGC方向</p>
+        <hr>
+        <ul class="intro-list">
+            <li>研发基于 SeedVR 2.5 (DiT) 与 FlashVSR 1.1 的 8K 超清放大工作流；</li>
+            <li>精通 FireRed 1.1 与 Flux.2 Klein 联合驱动的智能老照片重构技术；</li>
+            <li>专注于复杂纹理生成与极致去噪处理，具备工业级影像修复能力。</li>
+        </ul>
+        <div class="contact-grid">
+            <div>📞 电话: 15770610878</div>
+            <div>📧 邮箱: 1446484621@qq.com</div>
+            <div>🎓 硕士: 广东技术师范大学 (2021.9-2024.7)</div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="page-header">
+            <div class="header-left">
+                <a href="index.html" class="back-btn">← 返回首页</a>
+                <h2 class="page-title">图像放大修复 / Upscaling</h2>
+            </div>
+        </div>
+
+        <div class="workflow-section">
+            <h3 class="section-title">ComfyUI 核心工作流</h3>
+            <div class="workflow-grid">
+                <div class="workflow-card">
+                    <h4 style="color: #60a5fa; margin-bottom: 12px; font-size: 16px;">方案 A：SeedVR 2.5 & FlashVSR 1.1 联合架构</h4>
+                    <div class="img-static-area" onclick="openPreview('workflow/upscale/workflow_a.png')">
+                        <img src="workflow/upscale/workflow_a.png" alt="工作流A" onerror="this.src='https://placehold.co/800x450/1e293b/60a5fa?text=Place+workflow_a.png+in+upscale+folder'">
+                    </div>
+                    <p class="workflow-desc">适用于：<strong>人像、二次元、8K还原</strong>。核心模型 <strong>SeedVR2 (DiT)</strong> 配合 <strong>TTP 瓦片技术</strong> 突破 8K 显存瓶颈。</p>
+                </div>
+
+                <div class="workflow-card">
+                    <h4 style="color: #a78bfa; margin-bottom: 12px; font-size: 16px;">方案 B：FireRed + Flux-Klein 智能重构架构</h4>
+                    <div class="img-static-area" onclick="openPreview('workflow/upscale/workflow_b.png')">
+                        <img src="workflow/upscale/workflow_b.png" alt="工作流B" onerror="this.src='https://placehold.co/800x450/1e293b/a78bfa?text=Place+workflow_b.png+in+upscale+folder'">
+                    </div>
+                    <p class="workflow-desc">适用于：<strong>老旧照片去噪与修复</strong>。利用 <strong>FireRed 1.1</strong> 与 <strong>Flux.2 Klein</strong>实现语义化细节重构。</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="examples-section">
+            <h3 class="section-title">画质增强对比演示 (原图 / 结果 / 对比GIF)</h3>
+            <div class="examples-grid" id="examplesGrid">
+                <script>
+                    const basePath = 'workflow/upscale/';
+                    const examples = [
+                        { title: "1. 人像皮肤纹理细节修复", desc: "基于 SeedVR 2.5 (DiT) 架构生成皮肤微小毛孔与发丝纹理。", prefix: "demo1" },
+                        { title: "2. 老旧照片去噪与修复", desc: "利用 FireRed 1.1 专项去噪能力，精准剔除 JPEG 压缩痕迹。", prefix: "demo2" },
+                        { title: "3. 二次元/动漫边缘增强", desc: "调用 FlashVSR 1.1 算法优化矢量线条，消除边缘重影与锯齿。", prefix: "demo3" },
+                        { title: "4. 影视级 8K 超清还原", desc: "集成 TTP 瓦片处理集，支持超大分辨率素材的无损重绘。", prefix: "demo4" }
+                    ];
+
+                    examples.forEach(ex => {
+                        const low = `${basePath}${ex.prefix}_low.png`;
+                        const high = `${basePath}${ex.prefix}_high.png`;
+                        const gif = `${basePath}${ex.prefix}_gif.gif`;
+
+                        document.write(`
+                            <div class="example-card">
+                                <div class="example-images">
+                                    <div class="example-img-wrapper"><span class="example-label">原图</span><img src="${low}" onclick="openPreview('${low}')" onerror="this.src='https://placehold.co/300x300/0f172a/475569?text=Low'"></div>
+                                    <div class="example-img-wrapper"><span class="example-label">结果图</span><img src="${high}" onclick="openPreview('${high}')" onerror="this.src='https://placehold.co/300x300/0f172a/60a5fa?text=High'"></div>
+                                    <div class="example-img-wrapper"><span class="example-label">对比GIF</span><img src="${gif}" onclick="openPreview('${gif}')" onerror="this.src='https://placehold.co/300x300/0f172a/a78bfa?text=GIF'"></div>
+                                </div>
+                                <div class="example-info">
+                                    <div class="example-type">${ex.title}</div>
+                                    <div class="example-desc">${ex.desc}</div>
+                                </div>
+                            </div>
+                        `);
+                    });
+                </script>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">© 2026 范建斌 | ComfyUI AIGC工程师 | 广州</footer>
+
+    <div class="img-preview-modal" id="modal" onclick="this.classList.remove('active')">
+        <img src="" id="modalImg" class="img-preview-img">
+    </div>
+
+    <script>
+        function openPreview(url) {
+            const modal = document.getElementById('modal');
+            const modalImg = document.getElementById('modalImg');
+            modalImg.src = url;
+            modal.classList.add('active');
+        }
+    </script>
+</body>
+</html>
