@@ -104,13 +104,13 @@
             align-items: center;
             gap: 10px;
         }
-        .sub-wan { border-left-color: #10b981; } /* 万相绿色系 */
-        .sub-ltx { border-left-color: #f59e0b; } /* LTX橙色系 */
+        .sub-wan { border-left-color: #10b981; } 
+        .sub-ltx { border-left-color: #f59e0b; } 
 
-        /* 图像板块色调 */
+        /* 各板块色调 */
         .header-image { background: linear-gradient(135deg, #2563eb, #7c3aed); }
-        /* 视频板块色调 */
         .header-video { background: linear-gradient(135deg, #ec4899, #8b5cf6); }
+        .header-audio { background: linear-gradient(135deg, #f59e0b, #ef4444); } /* 音频板块橙红渐变 */
 
         /* 网格布局 */
         .cards-grid {
@@ -230,12 +230,16 @@
         .bg-wan-animate { background-image: url('./images/wan_animate.jpg'); }
         .bg-wan-avatar { background-image: url('./images/wan_avatar.jpg'); }
 
-        /* 背景图片映射 - LTX (更新) */
+        /* 背景图片映射 - LTX */
         .bg-ltx-i2v { background-image: url('./images/ltx_i2v.jpg'); }
         .bg-ltx-mv { background-image: url('./images/ltx_mv.jpg'); }
         .bg-ltx-motion { background-image: url('./images/ltx_motion.jpg'); }
         .bg-ltx-audio { background-image: url('./images/ltx_audio.jpg'); }
         .bg-ltx-inpaint { background-image: url('./images/ltx_inpaint.jpg'); }
+
+        /* 背景图片映射 - 音频 */
+        .bg-audio-music { background-image: url('./images/audio_music.jpg'); }
+        .bg-audio-vocal { background-image: url('./images/audio_vocal.jpg'); }
 
         .footer {
             text-align: center;
@@ -274,7 +278,6 @@
 
     <div class="main-container">
         <div class="section-header header-image">图像生成核心板块</div>
-
         <div class="cards-grid">
             <a href="style-transfer.html" class="function-card">
                 <div class="card-bg bg-style"></div>
@@ -289,7 +292,6 @@
                     </div>
                 </div>
             </a>
-
             <a href="controlnet.html" class="function-card">
                 <div class="card-bg bg-control"></div>
                 <div class="card-icon">⚙️</div>
@@ -302,7 +304,6 @@
                     </div>
                 </div>
             </a>
-
             <a href="image-restore.html" class="function-card">
                 <div class="card-bg bg-restore"></div>
                 <div class="card-icon">🔍</div>
@@ -315,7 +316,6 @@
                     </div>
                 </div>
             </a>
-
             <a href="inpaint.html" class="function-card">
                 <div class="card-bg bg-inpaint"></div>
                 <div class="card-icon">🖌️</div>
@@ -328,7 +328,6 @@
                     </div>
                 </div>
             </a>
-
             <a href="character-edit.html" class="function-card">
                 <div class="card-bg bg-character"></div>
                 <div class="card-icon">🎭</div>
@@ -341,7 +340,6 @@
                     </div>
                 </div>
             </a>
-
             <a href="storyboard.html" class="function-card">
                 <div class="card-bg bg-story"></div>
                 <div class="card-icon">🎬</div>
@@ -376,7 +374,6 @@
                     </div>
                 </div>
             </a>
-
             <a href="wan-long-video.html" class="function-card">
                 <div class="card-bg bg-wan-long"></div>
                 <div class="card-icon">🎥</div>
@@ -389,20 +386,18 @@
                     </div>
                 </div>
             </a>
-
             <a href="wan-animate.html" class="function-card">
                 <div class="card-bg bg-wan-animate"></div>
                 <div class="card-icon">🎭</div>
                 <div class="card-content">
                     <h2 class="card-title">Wan animate二创</h2>
-                    <p class="card-desc">结合 LoRA 训练与 Wan Animate 架构，实现动漫 IP 或特定风格的高保真角色动作还原。</p>
+                    <p class="card-desc">基于 Wan Animate 架构，实现动漫 IP 或特定风格的高保真角色动作还原。</p>
                     <div class="tags-group">
                         <span class="tag">角色一致性</span>
-                        <span class="tag">LoRA微调</span>
+                        <span class="tag">Wan Animate</span>
                     </div>
                 </div>
             </a>
-
             <a href="wan-digital-human.html" class="function-card">
                 <div class="card-bg bg-wan-avatar"></div>
                 <div class="card-icon">👤</div>
@@ -433,7 +428,6 @@
                     </div>
                 </div>
             </a>
-
             <a href="ltx-mv.html" class="function-card">
                 <div class="card-bg bg-ltx-mv"></div>
                 <div class="card-icon">🎤</div>
@@ -446,7 +440,6 @@
                     </div>
                 </div>
             </a>
-
             <a href="ltx-motion.html" class="function-card">
                 <div class="card-bg bg-ltx-motion"></div>
                 <div class="card-icon">🏃</div>
@@ -459,7 +452,6 @@
                     </div>
                 </div>
             </a>
-
             <a href="ltx-audio.html" class="function-card">
                 <div class="card-bg bg-ltx-audio"></div>
                 <div class="card-icon">🔊</div>
@@ -472,7 +464,6 @@
                     </div>
                 </div>
             </a>
-
             <a href="ltx-inpaint.html" class="function-card">
                 <div class="card-bg bg-ltx-inpaint"></div>
                 <div class="card-icon">🖌️</div>
@@ -482,6 +473,38 @@
                     <div class="tags-group">
                         <span class="tag">视频 Inpaint</span>
                         <span class="tag">动态编辑</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="section-header header-audio">音频生成核心板块</div>
+        <div class="cards-grid">
+            <a href="audio-music.html" class="function-card">
+                <div class="card-bg bg-audio-music"></div>
+                <div class="card-icon">🎵</div>
+                <div class="card-content">
+                    <h2 class="card-title">AI 音乐创作</h2>
+                    <p class="card-desc">基于 Lyria 3 引擎，实现从文本或旋律参考生成高保真音乐，涵盖专业编曲与多语种人声。</p>
+                    <div class="tags-group">
+                        <span class="tag">Lyria 3</span>
+                        <span class="tag">全流派</span>
+                        <span class="tag">自动编曲</span>
+                    </div>
+                </div>
+            </a>
+            <a href="audio-vocal.html" class="function-card">
+                <div class="card-bg bg-audio-vocal"></div>
+                <div class="card-icon">🎙️</div>
+                <div class="card-content">
+                    <h2 class="card-title">音色克隆/TTS</h2>
+                    <p class="card-desc">精准提取人声特征，实现高自然度的语音克隆与情感演绎，适用于有声书与虚拟主播。</p>
+                    <div class="tags-group">
+                        <span class="tag"></span>
+                        <span class="tag">情感合成</span>
+                        <span class="tag">多语言</span>
                     </div>
                 </div>
             </a>

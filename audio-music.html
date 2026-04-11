@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 音乐创作 - 范建斌 | ComfyUI AIGC工程师</title>
+    <style>
+        /* ============================================================
+           核心一致性样式
+           ============================================================ */
+        :root {
+            --primary-accent: #f59e0b; 
+            --secondary-accent: #ef4444;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --border-glow: rgba(245, 158, 11, 0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Inter", "PingFang SC", system-ui, sans-serif; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #f8fafc;
+            padding: 40px 20px;
+            max-width: 1400px; 
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .resume-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 32px;
+            margin-bottom: 40px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        .resume-card h1 {
+            font-size: 32px;
+            background: linear-gradient(90deg, var(--primary-accent), var(--secondary-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+            font-weight: 800;
+        }
+
+        .main-container {
+            background: rgba(30, 41, 59, 0.3);
+            border-radius: 28px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 40px 0 24px;
+            display: flex;
+            align-items: center; gap: 12px;
+        }
+
+        .section-title::before {
+            content: ""; width: 4px; height: 20px; background: var(--primary-accent); border-radius: 10px;
+        }
+
+        .workflow-card {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 20px; padding: 24px;
+            border: 1px solid var(--border-glow); margin-bottom: 32px;
+        }
+
+        .img-display-area {
+            width: 100%; border-radius: 12px; background: #000;
+            overflow: hidden; cursor: zoom-in; border: 1px solid rgba(255,255,255,0.1);
+        }
+        .img-display-area img { width: 100%; display: block; }
+
+        .example-item {
+            background: rgba(30, 41, 59, 0.4); border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            overflow: hidden; padding: 20px; margin-bottom: 32px;
+        }
+
+        .example-header { font-size: 16px; font-weight: 700; color: var(--primary-accent); margin-bottom: 16px; }
+
+        .media-sequence { display: grid; gap: 20px; }
+        .cols-2 { grid-template-columns: repeat(2, 1fr); }
+
+        .media-wrapper {
+            position: relative; background: #1e293b; aspect-ratio: 16 / 9;
+            border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .prompt-file-ui {
+            text-align: center;
+            color: #94a3b8;
+        }
+
+        .file-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            color: var(--primary-accent);
+            opacity: 0.8;
+        }
+
+        .file-name {
+            font-size: 13px;
+            font-family: "JetBrains Mono", monospace;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 4px 12px;
+            border-radius: 4px;
+        }
+
+        .audio-preview-ui {
+            width: 80%;
+            height: 50px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 30px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--primary-accent);
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .audio-preview-ui:hover { background: rgba(255,255,255,0.2); }
+
+        .media-label {
+            position: absolute; top: 10px; left: 10px;
+            background: rgba(15, 23, 42, 0.8); color: #fff;
+            padding: 4px 10px; border-radius: 6px; font-size: 11px;
+            font-weight: 700; z-index: 10; backdrop-filter: blur(4px);
+        }
+
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px;
+            border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 14px;
+            transition: 0.3s; cursor: pointer;
+            background: rgba(255, 255, 255, 0.05); color: var(--secondary-accent); border: 1px solid var(--border-glow);
+        }
+        .back-btn:hover { background: var(--primary-accent); color: #fff; }
+
+        .img-preview-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(20px); display: none; align-items: center; justify-content: center; z-index: 9999; }
+        .img-preview-modal.active { display: flex; }
+        
+        .audio-modal-container { background: #1e293b; padding: 40px; border-radius: 20px; width: 400px; text-align: center; border: 1px solid var(--primary-accent); }
+
+        @media (max-width: 1024px) {
+            .media-sequence { grid-template-columns: 1fr !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="resume-card">
+        <h1>范建斌 | ComfyUI AIGC工程师</h1>
+        <p class="base-info">28岁 | 广州 | 计算机技术硕士 | Lyria 3 音频生成专项</p>
+        <hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:20px 0;">
+        <ul style="list-style:none; font-size:14px; color:#cbd5e1; display:flex; gap:20px; flex-wrap:wrap;">
+            <li>🎵 多流派专业级编曲</li>
+            <li>🎤 情感化人声合成</li>
+            <li>🎬 影视级音效匹配 (SFX)</li>
+        </ul>
+    </div>
+
+    <div class="main-container">
+        <div class="page-header">
+            <a href="index.html" class="back-btn">← 返回首页</a>
+            <h2 style="font-size: 28px; font-weight: 700;">音频生成 / AI 音乐创作</h2>
+        </div>
+
+        <h3 class="section-title">核心模块：Lyria 3 音频工作流</h3>
+        <div class="workflow-card">
+            <div class="img-display-area" onclick="showModal('workflow/audio-music/workflow_audio.png', 'image')">
+                <img src="workflow/audio-music/workflow_audio.png" alt="Audio Workflow" onerror="this.src='https://placehold.co/1200x600/1e293b/64748b?text=Place+workflow_audio.png+in+folder'">
+            </div>
+        </div>
+
+        <div id="sections-container"></div>
+    </div>
+
+    <footer style="text-align:center; color:#64748b; font-size:14px; padding:48px;">© 2026 范建斌 | ComfyUI AIGC工程师 | 广州</footer>
+
+    <div class="img-preview-modal" id="modal" onclick="closeModal()">
+        <div id="modalAudioContainer" class="audio-modal-container" style="display:none;" onclick="event.stopPropagation()">
+            <div style="margin-bottom: 20px; color: #fff; font-weight: bold;">音频预览 (FLAC)</div>
+            <audio id="modalAudio" controls style="width: 100%;"></audio>
+        </div>
+        <img id="modalImg" src="" style="display:none; max-width: 90%; max-height: 90%;">
+    </div>
+
+    <script>
+        const basePath = 'workflow/audio-music/';
+
+        const sectionsData = [
+            {
+                title: "文生音乐风格展示 (Text-to-Music Styles)",
+                items: [
+                    { 
+                        id: 's1', 
+                        title: '01. 国风电子 (Modern Guofeng Electronic)', 
+                        files: ['style_guofeng_elec.txt', 'style_guofeng_elec.flac'],
+                        labels: ['PROMPT | 提示词文件', 'AUDIO | AI 生成音频']
+                    },
+                    { 
+                        id: 's2', 
+                        title: '02. 古风抒情氛围)', 
+                        files: ['style_gufeng_lyric.txt', 'style_gufeng_lyric.flac'],
+                        labels: ['PROMPT | 提示词文件', 'AUDIO | AI 生成音频']
+                    },
+                ]
+            }
+        ];
+
+        function renderContent() {
+            const container = document.getElementById('sections-container');
+            sectionsData.forEach(section => {
+                const secTitle = document.createElement('h3');
+                secTitle.className = 'section-title';
+                secTitle.innerText = section.title;
+                container.appendChild(secTitle);
+
+                const grid = document.createElement('div');
+                grid.className = 'example-grid';
+
+                section.items.forEach(item => {
+                    let mediaHtml = '';
+                    item.files.forEach((file, index) => {
+                        const isAudio = file.endsWith('.flac');
+                        const isTxt = file.endsWith('.txt');
+                        const fullPath = basePath + file;
+                        const label = item.labels[index];
+                        const labelStyle = isAudio ? 'background:linear-gradient(90deg, #f59e0b, #ef4444)' : '';
+
+                        mediaHtml += `
+                            <div class="media-wrapper">
+                                <span class="media-label" style="${labelStyle}">${label}</span>
+                                ${isTxt ? 
+                                    `<div class="prompt-file-ui">
+                                        <div class="file-icon">📄</div>
+                                        <div class="file-name">${file}</div>
+                                    </div>` : 
+                                    `<div class="audio-preview-ui" onclick="showModal('${fullPath}', 'audio')">▶ 点击播放预览</div>`
+                                }
+                            </div>
+                        `;
+                    });
+
+                    grid.innerHTML += `
+                        <div class="example-item">
+                            <div class="example-header">${item.title}</div>
+                            <div class="media-sequence cols-2">${mediaHtml}</div>
+                        </div>
+                    `;
+                });
+                container.appendChild(grid);
+            });
+        }
+
+        function showModal(url, type) {
+            const modal = document.getElementById('modal');
+            const mAudioCont = document.getElementById('modalAudioContainer');
+            const mAudio = document.getElementById('modalAudio');
+            const mImg = document.getElementById('modalImg');
+            
+            if (type === 'audio') {
+                mImg.style.display = "none";
+                mAudioCont.style.display = "block";
+                mAudio.src = url;
+                mAudio.play();
+            } else {
+                mAudioCont.style.display = "none";
+                mImg.style.display = "block";
+                mImg.src = url;
+            }
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            const a = document.getElementById('modalAudio');
+            modal.classList.remove('active');
+            a.pause(); a.src = "";
+        }
+
+        window.addEventListener('DOMContentLoaded', renderContent);
+    </script>
+</body>
+</html>
