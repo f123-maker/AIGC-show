@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP角色 LoRA 训练全流程 - 范建斌</title>
+    <style>
+        /* ============================================================
+           核心一致性样式：沿用 storyboard.html 的视觉风格
+           ============================================================ */
+        :root {
+            --primary-accent: #a78bfa;
+            --secondary-accent: #60a5fa;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --border-glow: rgba(167, 139, 250, 0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Inter", "PingFang SC", system-ui, sans-serif; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #f8fafc;
+            padding: 40px 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* 玻璃拟态卡片 */
+        .resume-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 32px;
+            margin-bottom: 40px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        .resume-card h1 {
+            font-size: 32px;
+            background: linear-gradient(90deg, var(--secondary-accent), var(--primary-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+            font-weight: 800;
+        }
+
+        .main-container {
+            background: rgba(30, 41, 59, 0.3);
+            border-radius: 28px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-top: 40px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title::before {
+            content: "";
+            width: 4px;
+            height: 20px;
+            background: var(--primary-accent);
+            border-radius: 10px;
+        }
+
+        /* 模块卡片 */
+        .workflow-module {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 32px;
+        }
+
+        /* 参数表格样式 */
+        .param-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: rgba(15, 23, 42, 0.3);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .param-table th, .param-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .param-table th {
+            background: rgba(167, 139, 250, 0.1);
+            color: var(--primary-accent);
+            font-size: 14px;
+        }
+
+        .param-table td {
+            font-size: 13px;
+            color: #cbd5e1;
+        }
+
+        /* PDF 容器样式 */
+        .pdf-container {
+            width: 100%;
+            height: 800px;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border-glow);
+            background: #1e293b;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 24px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--secondary-accent);
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            transition: 0.3s;
+        }
+
+        .back-btn:hover {
+            background: var(--secondary-accent);
+            color: white;
+            transform: translateX(-5px);
+        }
+
+        .tag {
+            font-size: 11px;
+            background: rgba(167, 139, 250, 0.1);
+            color: var(--primary-accent);
+            padding: 4px 12px;
+            border-radius: 100px;
+            border: 1px solid rgba(167, 139, 250, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="resume-card">
+        <h1>范建斌 | IP 角色 LoRA 训练全流程</h1>
+        <p style="color: #94a3b8; font-size: 16px;">基于 Z-image-turbo 与 LTX2.3 的自动化数据流与模型优化实战</p>
+    </div>
+
+    <div class="main-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
+            <a href="index.html" class="back-btn">← 返回作品集</a>
+            <span class="tag">深度学习 / LoRA 训练</span>
+        </div>
+
+        <h3 class="section-title">核心训练逻辑 (Core Workflow)</h3>
+        
+        <div class="workflow-module">
+            <h4 style="color:var(--secondary-accent); margin-bottom:12px;">1. 数据集准备与扩充</h4>
+            <p style="font-size:14px; color:#94a3b8;">
+                高质量 LoRA 的基础在于空间一致性。在仅有单图的情况下，首先构建<strong>正面特写、正面全身、背面全身</strong>三视图 。
+                利用 <strong>Nano Banana 2</strong> 模型进行参考生成，确保素材视角丰富且具备极高的一致性 [cite: 172]。
+            </p>
+        </div>
+
+        <div class="workflow-module">
+            <h4 style="color:var(--secondary-accent); margin-bottom:12px;">2. 自动化打标与剥离原则</h4>
+            <p style="font-size:14px; color:#94a3b8;">
+                采用 ComfyUI 批量打标工作流，调用 <strong>Qwen3.5-9B</strong> 进行反推 [cite: 184]。
+                <strong>剥离原则：</strong>标签中严禁描述固有身体特征（如发色、瞳色），这些特征应由触发词（如 `jrx`）独立负责 [cite: 179, 193]。
+            </p>
+        </div>
+
+        <div class="workflow-module">
+            <h4 style="color:var(--secondary-accent); margin-bottom:12px;">3. OneTrainer 进阶训练参数</h4>
+            <p style="font-size:14px; color:#94a3b8;">
+                采用 <strong>PRODIGY_ADV</strong> 优化器，学习率设为 1，开启激进拟合 [cite: 203, 215, 226]。针对显存瓶颈，采用 <strong>512 预拟合 → 1024 续训提升清晰度</strong> 的技巧 [cite: 203]。
+            </p>
+            <table class="param-table">
+                <thead>
+                    <tr><th>参数 (Parameter)</th><th>设定值 (Value)</th><th>说明 (Notes)</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>优化器</td><td>PRODIGY_ADV</td><td>自动学习率，拟合速度极快 </td></tr>
+                    <tr><td>分辨率</td><td>512 -> 1024</td><td>兼顾训练速度与出图细腻度 [cite: 203]</td></tr>
+                    <tr><td>模型精度</td><td>fp8 / bfloat16</td><td>显存优化，保留更多权重细节 [cite: 203]</td></tr>
+                    <tr><td>网络秩 (Rank)</td><td>64</td><td>标准 IP 角色训练深度 [cite: 203]</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3 class="section-title">原始技术手册 (Technical PDF)</h3>
+        <div class="workflow-module" style="padding: 10px;">
+            <p style="font-size: 12px; color: #64748b; margin: 10px;">提示：下方区域直接加载了原始 PDF 文档，您可以直接翻页查阅详细打标工作流与截图。</p>
+            <div class="pdf-container">
+                <iframe src="IP角色LoRA训练前言.pdf" width="100%" height="100%" style="border: none;">
+                    <p>您的浏览器不支持 PDF 预览，请 <a href="IP角色LoRA训练前言(1).pdf">点击此处下载</a> 查看。</p>
+                </iframe>
+            </div>
+        </div>
+
+    </div>
+
+    <footer style="text-align:center; color:#64748b; font-size:14px; padding:48px;">
+        © 2026 范建斌 | 基于 ComfyUI 与 OneTrainer 的 AIGC 解决方案
+    </footer>
+
+</body>
+</html>

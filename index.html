@@ -5,285 +5,717 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>范建斌 | ComfyUI AIGC工程师 作品集</title>
     <style>
-        /* 全局样式重置 */
-        * {
+        /* ========================================
+           CSS 设计令牌系统 - Design Tokens
+           ======================================== */
+        :root {
+            /* 色彩系统 */
+            --color-bg-primary: #0f172a;
+            --color-bg-secondary: rgba(30, 41, 59, 0.7);
+            --color-bg-tertiary: rgba(30, 41, 59, 0.3);
+            --color-bg-card: rgba(30, 41, 59, 0.4);
+
+            --color-text-primary: #f8fafc;
+            --color-text-secondary: #94a3b8;
+            --color-text-tertiary: #64748b;
+            --color-text-muted: #cbd5e1;
+
+            --color-accent-blue: #60a5fa;
+            --color-accent-purple: #a78bfa;
+            --color-accent-green: #10b981;
+            --color-accent-orange: #f59e0b;
+            --color-accent-pink: #ec4899;
+
+            --color-border-subtle: rgba(255, 255, 255, 0.1);
+            --color-border-medium: rgba(255, 255, 255, 0.05);
+
+            /* 字体系统 */
+            --font-family: "Inter", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+            --font-size-xs: 0.75rem;
+            --font-size-sm: 0.875rem;
+            --font-size-base: 1rem;
+            --font-size-lg: 1.125rem;
+            --font-size-xl: 1.25rem;
+            --font-size-2xl: 1.5rem;
+            --font-size-3xl: 1.875rem;
+            --font-size-4xl: 2.25rem;
+
+            /* 间距系统 - 8px 基础 */
+            --space-1: 0.25rem;
+            --space-2: 0.5rem;
+            --space-3: 0.75rem;
+            --space-4: 1rem;
+            --space-5: 1.25rem;
+            --space-6: 1.5rem;
+            --space-8: 2rem;
+            --space-10: 2.5rem;
+            --space-12: 3rem;
+            --space-16: 4rem;
+
+            /* 圆角系统 */
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --radius-2xl: 24px;
+            --radius-full: 9999px;
+
+            /* 阴影系统 */
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.25);
+            --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.35);
+            --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.45);
+
+            /* 过渡动画 */
+            --transition-fast: 150ms ease;
+            --transition-normal: 300ms ease;
+            --transition-slow: 500ms cubic-bezier(0.23, 1, 0.32, 1);
+
+            /* 容器宽度 */
+            --container-max: 1400px;
+        }
+
+        /* ========================================
+           全局样式重置
+           ======================================== */
+        *, *::before, *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "Inter", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         body {
-            background-color: #0f172a; /* 深色背景 */
-            color: #f8fafc;
-            padding: 32px 20px;
-            max-width: 1400px;
+            background-color: var(--color-bg-primary);
+            color: var(--color-text-primary);
+            font-family: var(--font-family);
+            font-size: var(--font-size-base);
+            line-height: 1.6;
+            padding: var(--space-8) var(--space-5);
+            max-width: var(--container-max);
             margin: 0 auto;
         }
 
-        /* 顶部个人简历卡片 */
-        .resume-card {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 40px;
-            margin-bottom: 48px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        /* 焦点可见性 - 可访问性 */
+        :focus-visible {
+            outline: 2px solid var(--color-accent-blue);
+            outline-offset: 3px;
         }
 
-        .resume-card h1 {
-            font-size: 36px;
-            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+        /* 减少动画 (可访问性) */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* ========================================
+           简历卡片 - Resume Card
+           ======================================== */
+        .resume-card {
+            background: var(--color-bg-secondary);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--color-border-subtle);
+            border-radius: var(--radius-xl);
+            padding: var(--space-10);
+            margin-bottom: var(--space-12);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 卡片顶部装饰线 */
+        .resume-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--color-accent-blue), var(--color-accent-purple), var(--color-accent-pink));
+        }
+
+        .resume-card__header {
+            margin-bottom: var(--space-4);
+        }
+
+        .resume-card__title {
+            font-size: var(--font-size-4xl);
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--color-accent-blue) 0%, var(--color-accent-purple) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 12px;
-            font-weight: 800;
+            background-clip: text;
+            margin-bottom: var(--space-3);
+            letter-spacing: -0.02em;
         }
 
-        .base-info {
-            font-size: 17px;
-            color: #94a3b8;
-            margin-bottom: 20px;
-            letter-spacing: 0.5px;
+        .resume-card__subtitle {
+            font-size: var(--font-size-lg);
+            color: var(--color-text-secondary);
+            letter-spacing: 0.02em;
         }
 
-        .resume-card hr {
+        .resume-card__divider {
             border: none;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 24px;
+            border-top: 1px solid var(--color-border-subtle);
+            margin: var(--space-6) 0;
         }
 
-        .intro-list {
-            margin-left: 20px;
-            margin-bottom: 30px;
-            line-height: 1.8;
-            color: #cbd5e1;
-            font-size: 16px;
+        .resume-card__intro {
+            margin-left: var(--space-5);
+            margin-bottom: var(--space-8);
+            line-height: 1.9;
+            color: var(--color-text-muted);
+            font-size: var(--font-size-base);
         }
 
-        .intro-list li { margin-bottom: 10px; }
+        .resume-card__intro li {
+            margin-bottom: var(--space-3);
+            padding-left: var(--space-2);
+        }
 
-        .contact-grid {
+        .resume-card__intro li::marker {
+            color: var(--color-accent-blue);
+        }
+
+        .resume-card__contact {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 16px;
-            font-size: 15px;
-            color: #94a3b8;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: var(--space-4);
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
         }
 
-        /* 主容器 */
-        .main-container {
-            background: rgba(30, 41, 59, 0.3);
-            border-radius: 24px;
-            padding: 40px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            margin-bottom: 48px;
-        }
-
-        .section-header {
-            display: inline-block;
-            color: #ffffff;
-            font-size: 20px;
-            font-weight: 700;
-            padding: 12px 32px;
-            border-radius: 50px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        /* 子板块小标题样式 */
-        .sub-section-header {
-            font-size: 18px;
-            font-weight: 600;
-            color: #f8fafc;
-            margin: 20px 0 24px 10px;
-            padding-left: 15px;
-            border-left: 4px solid #60a5fa;
+        .resume-card__contact-item {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: var(--space-3);
+            padding: var(--space-3) var(--space-4);
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
         }
-        .sub-wan { border-left-color: #10b981; } 
-        .sub-ltx { border-left-color: #f59e0b; } 
 
-        /* 各板块色调 */
-        .header-image { background: linear-gradient(135deg, #2563eb, #7c3aed); }
-        .header-video { background: linear-gradient(135deg, #ec4899, #8b5cf6); }
-        .header-audio { background: linear-gradient(135deg, #f59e0b, #ef4444); } /* 音频板块橙红渐变 */
+        .resume-card__contact-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateX(4px);
+        }
 
-        /* 网格布局 */
+        .resume-card__contact-icon {
+            font-size: var(--font-size-lg);
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(96, 165, 250, 0.15);
+            border-radius: var(--radius-sm);
+        }
+
+        /* ========================================
+           主容器
+           ======================================== */
+        .main-container {
+            background: var(--color-bg-tertiary);
+            border-radius: var(--radius-2xl);
+            padding: var(--space-10);
+            border: 1px solid var(--color-border-medium);
+            margin-bottom: var(--space-12);
+        }
+
+        /* ========================================
+           板块标题
+           ======================================== */
+        .section-header {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-3);
+            color: var(--color-text-primary);
+            font-size: var(--font-size-xl);
+            font-weight: 700;
+            padding: var(--space-4) var(--space-8);
+            border-radius: var(--radius-full);
+            margin-bottom: var(--space-8);
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section-header::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            opacity: 0.9;
+            z-index: -1;
+        }
+
+        .section-header__icon {
+            font-size: var(--font-size-2xl);
+        }
+
+        /* 板块色调变体 */
+        .header-image {
+            background: linear-gradient(135deg, #3b82f6 0%, #6366f1 50%, #8b5cf6 100%);
+        }
+
+        .header-video {
+            background: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #6366f1 100%);
+        }
+
+        .header-lora {
+            background: linear-gradient(135deg, #10b981 0%, #06b6d4 50%, #3b82f6 100%);
+        }
+
+        .header-audio {
+            background: linear-gradient(135deg, #f59e0b 0%, #f97316 50%, #ef4444 100%);
+        }
+
+        /* 子板块标题 */
+        .sub-section-header {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin: var(--space-8) 0 var(--space-6);
+            padding-left: var(--space-4);
+            border-left: 4px solid var(--color-accent-blue);
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .sub-section-header--wan {
+            border-left-color: var(--color-accent-green);
+        }
+
+        .sub-section-header--ltx {
+            border-left-color: var(--color-accent-orange);
+        }
+
+        .sub-section-header__icon {
+            font-size: var(--font-size-xl);
+        }
+
+        /* ========================================
+           卡片网格
+           ======================================== */
         .cards-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 32px;
-            margin-bottom: 40px;
+            gap: var(--space-8);
+            margin-bottom: var(--space-10);
         }
 
-        /* 核心功能卡片 */
+        /* ========================================
+           功能卡片
+           ======================================== */
         .function-card {
             position: relative;
-            height: 420px;
-            border-radius: 20px;
+            height: 440px;
+            border-radius: var(--radius-xl);
             overflow: hidden;
             text-decoration: none;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
-            padding: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            padding: var(--space-8);
+            border: 1px solid var(--color-border-subtle);
+            transition:
+                transform var(--transition-slow),
+                border-color var(--transition-normal),
+                box-shadow var(--transition-normal);
+            will-change: transform;
         }
 
+        /* 卡片背景 */
         .card-bg {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            transition: transform 0.8s ease;
+            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
             z-index: 1;
         }
 
+        /* 懒加载占位背景 */
+        .card-bg.loading {
+            background: linear-gradient(
+                135deg,
+                rgba(30, 41, 59, 0.8) 0%,
+                rgba(51, 65, 85, 0.6) 100%
+            );
+        }
+
+        .card-bg.loading::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                rgba(255, 255, 255, 0.05) 50%,
+                transparent 100%
+            );
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* 渐变遮罩 */
         .function-card::after {
             content: "";
             position: absolute;
             inset: 0;
-            background: linear-gradient(180deg, rgba(15, 23, 42, 0) 0%, rgba(15, 23, 42, 0.95) 85%);
+            background: linear-gradient(
+                180deg,
+                rgba(15, 23, 42, 0) 0%,
+                rgba(15, 23, 42, 0.4) 40%,
+                rgba(15, 23, 42, 0.95) 85%
+            );
             z-index: 2;
+            pointer-events: none;
         }
 
+        /* 卡片内容 */
         .card-content {
             position: relative;
             z-index: 3;
-            transform: translateY(10px);
-            transition: transform 0.4s ease;
+            transform: translateY(12px);
+            transition: transform var(--transition-normal);
         }
 
+        /* 卡片图标 */
         .card-icon {
             position: absolute;
-            top: -260px;
+            top: -280px;
             right: 0;
-            font-size: 32px;
+            font-size: 28px;
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(8px);
-            width: 56px; height: 56px;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 14px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.4s ease;
+            -webkit-backdrop-filter: blur(8px);
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all var(--transition-normal);
         }
 
         .card-title {
-            font-size: 26px;
+            font-size: var(--font-size-2xl);
             font-weight: 700;
-            color: #ffffff;
-            margin-bottom: 12px;
+            color: var(--color-text-primary);
+            margin-bottom: var(--space-3);
+            letter-spacing: -0.01em;
         }
 
         .card-desc {
-            font-size: 15px;
-            line-height: 1.6;
-            color: #cbd5e1;
-            margin-bottom: 24px;
-            opacity: 0.8;
+            font-size: var(--font-size-sm);
+            line-height: 1.7;
+            color: var(--color-text-muted);
+            margin-bottom: var(--space-5);
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
+        /* 标签组 */
         .tags-group {
             display: flex;
-            gap: 10px;
+            gap: var(--space-2);
             flex-wrap: wrap;
         }
 
         .tag {
-            background: rgba(255, 255, 255, 0.1);
-            color: #60a5fa;
-            padding: 6px 14px;
-            border-radius: 6px;
-            font-size: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--color-accent-blue);
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-sm);
+            font-size: var(--font-size-xs);
             font-weight: 600;
             border: 1px solid rgba(96, 165, 250, 0.2);
+            transition: all var(--transition-fast);
         }
 
-        /* 悬浮动效 */
+        /* 悬浮效果 */
         .function-card:hover {
-            transform: translateY(-12px);
-            border-color: rgba(96, 165, 250, 0.5);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            transform: translateY(-10px);
+            border-color: rgba(96, 165, 250, 0.4);
+            box-shadow: var(--shadow-xl);
         }
 
-        .function-card:hover .card-bg { transform: scale(1.1); }
-        .function-card:hover .card-content { transform: translateY(0); }
-        .function-card:hover .card-icon { background: #2563eb; transform: rotate(10deg); }
+        .function-card:hover .card-bg {
+            transform: scale(1.08);
+        }
 
-        /* 背景图片映射 - 图像 */
+        .function-card:hover .card-content {
+            transform: translateY(0);
+        }
+
+        .function-card:hover .card-icon {
+            background: #3b82f6;
+            transform: rotate(8deg) scale(1.05);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+        }
+
+        .function-card:hover .tag {
+            background: rgba(96, 165, 250, 0.15);
+        }
+
+        /* 点击涟漪效果 */
+        .function-card::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 4;
+            pointer-events: none;
+        }
+
+        .function-card:active::before {
+            width: 400px;
+            height: 400px;
+            opacity: 0;
+            animation: ripple 0.6s ease-out;
+        }
+
+        @keyframes ripple {
+            0% {
+                width: 0;
+                height: 0;
+                opacity: 0.5;
+            }
+            100% {
+                width: 400px;
+                height: 400px;
+                opacity: 0;
+            }
+        }
+
+        /* ========================================
+           背景图片映射
+           ======================================== */
         .bg-style { background-image: url('./images/style.jpg'); }
         .bg-control { background-image: url('./images/control.jpg'); }
         .bg-restore { background-image: url('./images/restore.jpg'); }
         .bg-inpaint { background-image: url('./images/inpaint.jpg'); }
         .bg-character { background-image: url('./images/character.jpg'); }
         .bg-story { background-image: url('./images/story.jpg'); }
-        
-        /* 背景图片映射 - 万相 */
+
         .bg-wan-keyframes { background-image: url('./images/wan_keyframes.jpg'); }
         .bg-wan-long { background-image: url('./images/wan_long.jpg'); }
         .bg-wan-animate { background-image: url('./images/wan_animate.jpg'); }
         .bg-wan-avatar { background-image: url('./images/wan_avatar.jpg'); }
 
-        /* 背景图片映射 - LTX */
         .bg-ltx-i2v { background-image: url('./images/ltx_i2v.jpg'); }
         .bg-ltx-mv { background-image: url('./images/ltx_mv.jpg'); }
         .bg-ltx-motion { background-image: url('./images/ltx_motion.jpg'); }
         .bg-ltx-audio { background-image: url('./images/ltx_audio.jpg'); }
         .bg-ltx-inpaint { background-image: url('./images/ltx_inpaint.jpg'); }
 
-        /* 背景图片映射 - 音频 */
+        .bg-lora-character { background-image: url('./images/lora_character.jpg'); }
+
         .bg-audio-music { background-image: url('./images/audio_music.jpg'); }
         .bg-audio-vocal { background-image: url('./images/audio_vocal.jpg'); }
 
+        /* ========================================
+           页脚
+           ======================================== */
         .footer {
             text-align: center;
-            padding: 48px;
-            color: #64748b;
-            font-size: 14px;
+            padding: var(--space-12) var(--space-4);
+            color: var(--color-text-tertiary);
+            font-size: var(--font-size-sm);
         }
 
-        /* 响应式 */
-        @media (max-width: 1100px) { .cards-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 700px) {
-            .cards-grid { grid-template-columns: 1fr; }
-            .resume-card { padding: 24px; }
-            .main-container { padding: 20px; }
+        .footer__link {
+            color: var(--color-accent-blue);
+            text-decoration: none;
+            transition: color var(--transition-fast);
+        }
+
+        .footer__link:hover {
+            color: var(--color-accent-purple);
+            text-decoration: underline;
+        }
+
+        /* ========================================
+           滚动条样式
+           ======================================== */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--color-bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--color-bg-secondary);
+            border-radius: 5px;
+            border: 2px solid var(--color-bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* ========================================
+           响应式设计
+           ======================================== */
+        @media (max-width: 1200px) {
+            .cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: var(--space-6);
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: var(--space-6) var(--space-4);
+            }
+
+            .resume-card {
+                padding: var(--space-6);
+            }
+
+            .resume-card__title {
+                font-size: var(--font-size-3xl);
+            }
+
+            .resume-card__contact {
+                grid-template-columns: 1fr;
+            }
+
+            .main-container {
+                padding: var(--space-6);
+            }
+
+            .section-header {
+                font-size: var(--font-size-base);
+                padding: var(--space-3) var(--space-6);
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+                gap: var(--space-5);
+            }
+
+            .function-card {
+                height: 380px;
+            }
+
+            .card-icon {
+                top: -240px;
+                width: 52px;
+                height: 52px;
+                font-size: 24px;
+            }
+
+            .sub-section-header {
+                font-size: var(--font-size-base);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .resume-card__title {
+                font-size: var(--font-size-2xl);
+            }
+
+            .resume-card__subtitle {
+                font-size: var(--font-size-sm);
+            }
+
+            .function-card {
+                height: 340px;
+                padding: var(--space-6);
+            }
+
+            .card-title {
+                font-size: var(--font-size-xl);
+            }
+
+            .card-desc {
+                font-size: var(--font-size-xs);
+                -webkit-line-clamp: 2;
+            }
         }
     </style>
 </head>
 <body>
 
-    <div class="resume-card">
-        <h1>范建斌 | ComfyUI AIGC工程师</h1>
-        <p class="base-info">28岁 | 广州 | 计算机技术硕士 | 图像处理/机器学习/AIGC方向</p>
-        <hr>
-        <ul class="intro-list">
+    <!-- 简历卡片 -->
+    <article class="resume-card" role="region" aria-label="个人简历">
+        <header class="resume-card__header">
+            <h1 class="resume-card__title">范建斌 | ComfyUI AIGC工程师</h1>
+            <p class="resume-card__subtitle">28岁 · 广州 · 计算机技术硕士 · 图像处理/机器学习/AIGC方向</p>
+        </header>
+
+        <hr class="resume-card__divider">
+
+        <ul class="resume-card__intro">
             <li>精通ComfyUI工作流设计与插件开发，uinodes.com 教学内容贡献者；</li>
             <li>熟练完成Flux/WanVideo LoRA训练微调，具备商业落地全栈能力；</li>
             <li>拥有多项发明专利及工业级视觉算法项目经验。</li>
         </ul>
-        <div class="contact-grid">
-            <div>📞 电话: 15770610878</div>
-            <div>📧 邮箱: 1446484621@qq.com</div>
-            <div>🎓 广东技术师范大学 (2021.9-2024.7)</div>
-            <div>📚 南昌大学科学技术学院 (2016.9-2020.7)</div>
-        </div>
-    </div>
 
-    <div class="main-container">
-        <div class="section-header header-image">图像生成核心板块</div>
+        <div class="resume-card__contact" role="list">
+            <div class="resume-card__contact-item" role="listitem">
+                <span class="resume-card__contact-icon" aria-hidden="true">📞</span>
+                <span>电话: 15770610878</span>
+            </div>
+            <div class="resume-card__contact-item" role="listitem">
+                <span class="resume-card__contact-icon" aria-hidden="true">📧</span>
+                <span>邮箱: 1446484621@qq.com</span>
+            </div>
+            <div class="resume-card__contact-item" role="listitem">
+                <span class="resume-card__contact-icon" aria-hidden="true">🎓</span>
+                <span>广东技术师范大学 (2021.9-2024.7)</span>
+            </div>
+            <div class="resume-card__contact-item" role="listitem">
+                <span class="resume-card__contact-icon" aria-hidden="true">📚</span>
+                <span>南昌大学科学技术学院 (2016.9-2020.7)</span>
+            </div>
+        </div>
+    </article>
+
+    <!-- 图像生成核心板块 -->
+    <section class="main-container" aria-labelledby="image-section-title">
+        <h2 class="section-header header-image" id="image-section-title">
+            <span class="section-header__icon" aria-hidden="true">🖼️</span>
+            <span>图像生成核心板块</span>
+        </h2>
+
         <div class="cards-grid">
-            <a href="style-transfer.html" class="function-card">
-                <div class="card-bg bg-style"></div>
-                <div class="card-icon">🎨</div>
+            <a href="style-transfer.html" class="function-card" aria-label="风格迁移 - 基于 Flux-2-KLEIN 与 Qwen3.5 VLM 技术">
+                <div class="card-bg bg-style" loading="lazy" role="img" aria-label="风格迁移示例图"></div>
+                <div class="card-icon" aria-hidden="true">🎨</div>
                 <div class="card-content">
-                    <h2 class="card-title">风格迁移</h2>
+                    <h3 class="card-title">风格迁移</h3>
                     <p class="card-desc">基于 Flux-2-KLEIN 与 Qwen3.5 VLM 技术，实现 3D 迪士尼、梵高油画等艺术风格的高保真迁移。</p>
                     <div class="tags-group">
                         <span class="tag">Flux-2-KLEIN</span>
@@ -292,11 +724,12 @@
                     </div>
                 </div>
             </a>
-            <a href="controlnet.html" class="function-card">
-                <div class="card-bg bg-control"></div>
-                <div class="card-icon">⚙️</div>
+
+            <a href="controlnet.html" class="function-card" aria-label="ControlNet 控图 - 姿态、边缘、深度全维度精准控制">
+                <div class="card-bg bg-control" loading="lazy" role="img" aria-label="ControlNet控图示例"></div>
+                <div class="card-icon" aria-hidden="true">⚙️</div>
                 <div class="card-content">
-                    <h2 class="card-title">ControlNet 控图</h2>
+                    <h3 class="card-title">ControlNet 控图</h3>
                     <p class="card-desc">姿态、边缘、深度全维度精准控制，实现 100% 符合商业需求的构图与动作生成。</p>
                     <div class="tags-group">
                         <span class="tag">Z-Image-Turbo</span>
@@ -304,11 +737,12 @@
                     </div>
                 </div>
             </a>
-            <a href="image-restore.html" class="function-card">
-                <div class="card-bg bg-restore"></div>
-                <div class="card-icon">🔍</div>
+
+            <a href="image-restore.html" class="function-card" aria-label="图像放大修复 - 低清素材8K超清无损放大">
+                <div class="card-bg bg-restore" loading="lazy" role="img" aria-label="图像修复示例"></div>
+                <div class="card-icon" aria-hidden="true">🔍</div>
                 <div class="card-content">
-                    <h2 class="card-title">图像放大修复</h2>
+                    <h3 class="card-title">图像放大修复</h3>
                     <p class="card-desc">低清素材 8K 超清无损放大，去除噪点与压缩痕迹，适用于影视级素材修复。</p>
                     <div class="tags-group">
                         <span class="tag">超分模型</span>
@@ -316,11 +750,12 @@
                     </div>
                 </div>
             </a>
-            <a href="inpaint.html" class="function-card">
-                <div class="card-bg bg-inpaint"></div>
-                <div class="card-icon">🖌️</div>
+
+            <a href="inpaint.html" class="function-card" aria-label="局部重绘 - 指定区域精准编辑">
+                <div class="card-bg bg-inpaint" loading="lazy" role="img" aria-label="局部重绘示例"></div>
+                <div class="card-icon" aria-hidden="true">🖌️</div>
                 <div class="card-content">
-                    <h2 class="card-title">局部重绘</h2>
+                    <h3 class="card-title">局部重绘</h3>
                     <p class="card-desc">指定区域精准编辑，支持物体替换、背景修改与瑕疵消除，满足精细化设计需求。</p>
                     <div class="tags-group">
                         <span class="tag">Inpaint</span>
@@ -328,11 +763,12 @@
                     </div>
                 </div>
             </a>
-            <a href="character-edit.html" class="function-card">
-                <div class="card-bg bg-character"></div>
-                <div class="card-icon">🎭</div>
+
+            <a href="character-edit.html" class="function-card" aria-label="人物编辑换脸 - 一键换装人脸替换">
+                <div class="card-bg bg-character" loading="lazy" role="img" aria-label="人物编辑示例"></div>
+                <div class="card-icon" aria-hidden="true">🎭</div>
                 <div class="card-content">
-                    <h2 class="card-title">人物编辑/换脸</h2>
+                    <h3 class="card-title">人物编辑/换脸</h3>
                     <p class="card-desc">一键换装、人脸替换、姿态修改，保留 IP 特征的无痕二创，适用于短视频模特创作。</p>
                     <div class="tags-group">
                         <span class="tag">IP-Adapter</span>
@@ -340,11 +776,12 @@
                     </div>
                 </div>
             </a>
-            <a href="storyboard.html" class="function-card">
-                <div class="card-bg bg-story"></div>
-                <div class="card-icon">🎬</div>
+
+            <a href="storyboard.html" class="function-card" aria-label="分镜图生成 - 批量产出可视化分镜">
+                <div class="card-bg bg-story" loading="lazy" role="img" aria-label="分镜图示例"></div>
+                <div class="card-icon" aria-hidden="true">🎬</div>
                 <div class="card-content">
-                    <h2 class="card-title">分镜图生成</h2>
+                    <h3 class="card-title">分镜图生成</h3>
                     <p class="card-desc">批量产出镜头语言统一的可视化分镜，大幅提升影视与动漫的前期创作效率。</p>
                     <div class="tags-group">
                         <span class="tag">分镜脚本</span>
@@ -353,20 +790,26 @@
                 </div>
             </a>
         </div>
-    </div>
+    </section>
 
-    <div class="main-container">
-        <div class="section-header header-video">视频生成核心板块</div>
+    <!-- 视频生成核心板块 -->
+    <section class="main-container" aria-labelledby="video-section-title">
+        <h2 class="section-header header-video" id="video-section-title">
+            <span class="section-header__icon" aria-hidden="true">🎥</span>
+            <span>视频生成核心板块</span>
+        </h2>
 
-        <div class="sub-section-header sub-wan">
-            <span>🎬 WanVideo (万相) 生态 - 专业影视工作流</span>
+        <div class="sub-section-header sub-section-header--wan">
+            <span class="sub-section-header__icon" aria-hidden="true">🎬</span>
+            <span>WanVideo (万相) 生态 - 专业影视工作流</span>
         </div>
+
         <div class="cards-grid">
-            <a href="wan-keyframes.html" class="function-card">
-                <div class="card-bg bg-wan-keyframes"></div>
-                <div class="card-icon">🎞️</div>
+            <a href="wan-keyframes.html" class="function-card" aria-label="首尾帧视频 - 关键帧控制">
+                <div class="card-bg bg-wan-keyframes" loading="lazy" role="img" aria-label="首尾帧视频示例"></div>
+                <div class="card-icon" aria-hidden="true">🎞️</div>
                 <div class="card-content">
-                    <h2 class="card-title">首尾帧视频</h2>
+                    <h3 class="card-title">首尾帧视频</h3>
                     <p class="card-desc">精准控制起始与结束关键帧，实现逻辑严密的动作补全与电影级丝滑过渡。</p>
                     <div class="tags-group">
                         <span class="tag">关键帧控制</span>
@@ -374,11 +817,12 @@
                     </div>
                 </div>
             </a>
-            <a href="wan-long-video.html" class="function-card">
-                <div class="card-bg bg-wan-long"></div>
-                <div class="card-icon">🎥</div>
+
+            <a href="wan-long-video.html" class="function-card" aria-label="多帧长视频 - 时序引导长序列生成">
+                <div class="card-bg bg-wan-long" loading="lazy" role="img" aria-label="长视频生成示例"></div>
+                <div class="card-icon" aria-hidden="true">🎥</div>
                 <div class="card-content">
-                    <h2 class="card-title">多帧长视频</h2>
+                    <h3 class="card-title">多帧长视频</h3>
                     <p class="card-desc">通过时序引导与分段生成技术，突破时长限制，输出具有强一致性的长篇幅视频内容。</p>
                     <div class="tags-group">
                         <span class="tag">时序引导</span>
@@ -386,11 +830,12 @@
                     </div>
                 </div>
             </a>
-            <a href="wan-animate.html" class="function-card">
-                <div class="card-bg bg-wan-animate"></div>
-                <div class="card-icon">🎭</div>
+
+            <a href="wan-animate.html" class="function-card" aria-label="Wan animate二创 - 动漫IP角色动作还原">
+                <div class="card-bg bg-wan-animate" loading="lazy" role="img" aria-label="Wan Animate二创示例"></div>
+                <div class="card-icon" aria-hidden="true">🎭</div>
                 <div class="card-content">
-                    <h2 class="card-title">Wan animate二创</h2>
+                    <h3 class="card-title">Wan animate二创</h3>
                     <p class="card-desc">基于 Wan Animate 架构，实现动漫 IP 或特定风格的高保真角色动作还原。</p>
                     <div class="tags-group">
                         <span class="tag">角色一致性</span>
@@ -398,11 +843,12 @@
                     </div>
                 </div>
             </a>
-            <a href="wan-digital-human.html" class="function-card">
-                <div class="card-bg bg-wan-avatar"></div>
-                <div class="card-icon">👤</div>
+
+            <a href="wan-digital-human.html" class="function-card" aria-label="数字人 - 口型对齐面部表情驱动">
+                <div class="card-bg bg-wan-avatar" loading="lazy" role="img" aria-label="数字人示例"></div>
+                <div class="card-icon" aria-hidden="true">👤</div>
                 <div class="card-content">
-                    <h2 class="card-title">数字人</h2>
+                    <h3 class="card-title">数字人</h3>
                     <p class="card-desc">实现精准的口型对齐与面部表情驱动，打造具有真实交互感的虚拟播报与数字分身。</p>
                     <div class="tags-group">
                         <span class="tag">口型对齐</span>
@@ -412,15 +858,17 @@
             </a>
         </div>
 
-        <div class="sub-section-header sub-ltx">
-            <span>⚡ LTX-Video 2.3 生态 - 高性能创作</span>
+        <div class="sub-section-header sub-section-header--ltx">
+            <span class="sub-section-header__icon" aria-hidden="true">⚡</span>
+            <span>LTX-Video 2.3 生态 - 高性能创作</span>
         </div>
+
         <div class="cards-grid">
-            <a href="ltx-i2v.html" class="function-card">
-                <div class="card-bg bg-ltx-i2v"></div>
-                <div class="card-icon">🌀</div>
+            <a href="ltx-i2v.html" class="function-card" aria-label="图生视频 - LTX高一致性">
+                <div class="card-bg bg-ltx-i2v" loading="lazy" role="img" aria-label="图生视频示例"></div>
+                <div class="card-icon" aria-hidden="true">🌀</div>
                 <div class="card-content">
-                    <h2 class="card-title">图生视频</h2>
+                    <h3 class="card-title">图生视频</h3>
                     <p class="card-desc">利用 LTX 独有的时间轴注入算法，确保首尾帧完美衔接，实现高时序一致性的无缝循环动效。</p>
                     <div class="tags-group">
                         <span class="tag">LTX-I2V</span>
@@ -428,11 +876,12 @@
                     </div>
                 </div>
             </a>
-            <a href="ltx-mv.html" class="function-card">
-                <div class="card-bg bg-ltx-mv"></div>
-                <div class="card-icon">🎤</div>
+
+            <a href="ltx-mv.html" class="function-card" aria-label="数字人MV - 音频驱动极速出片">
+                <div class="card-bg bg-ltx-mv" loading="lazy" role="img" aria-label="数字人MV示例"></div>
+                <div class="card-icon" aria-hidden="true">🎤</div>
                 <div class="card-content">
-                    <h2 class="card-title">数字人 MV</h2>
+                    <h3 class="card-title">数字人 MV</h3>
                     <p class="card-desc">结合音频驱动与 LTX 极速生成能力，打造口型精准、节奏感强的虚拟人音乐短片与商业播报。</p>
                     <div class="tags-group">
                         <span class="tag">音频驱动</span>
@@ -440,11 +889,12 @@
                     </div>
                 </div>
             </a>
-            <a href="ltx-motion.html" class="function-card">
-                <div class="card-bg bg-ltx-motion"></div>
-                <div class="card-icon">🏃</div>
+
+            <a href="ltx-motion.html" class="function-card" aria-label="动作迁移 - 跨角色动作复刻">
+                <div class="card-bg bg-ltx-motion" loading="lazy" role="img" aria-label="动作迁移示例"></div>
+                <div class="card-icon" aria-hidden="true">🏃</div>
                 <div class="card-content">
-                    <h2 class="card-title">动作迁移</h2>
+                    <h3 class="card-title">动作迁移</h3>
                     <p class="card-desc">精准提取源视频动作轨迹并注入，实现跨角色、跨风格的专业级动作复刻，保留运动张力。</p>
                     <div class="tags-group">
                         <span class="tag">动作捕捉</span>
@@ -452,67 +902,105 @@
                     </div>
                 </div>
             </a>
-            <a href="ltx-audio.html" class="function-card">
-                <div class="card-bg bg-ltx-audio"></div>
-                <div class="card-icon">🔊</div>
+        </div>
+    </section>
+
+    <!-- LoRA 模型训练 -->
+    <section class="main-container" aria-labelledby="lora-section-title">
+        <h2 class="section-header header-lora" id="lora-section-title">
+            <span class="section-header__icon" aria-hidden="true">🧠</span>
+            <span>LoRA 模型训练与微调</span>
+        </h2>
+
+        <div class="cards-grid">
+            <a href="lora-character.html" class="function-card" aria-label="人物IP角色训练 - Flux LoRA">
+                <div class="card-bg bg-lora-character" loading="lazy" role="img" aria-label="LoRA训练示例"></div>
+                <div class="card-icon" aria-hidden="true">👤</div>
                 <div class="card-content">
-                    <h2 class="card-title">无声视频配音效</h2>
-                    <p class="card-desc">深度适配 Wan2.2，为生成的无声素材自动匹配高保真环境音效与打击感音轨，补齐视听闭环。</p>
+                    <h3 class="card-title">人物 IP 角色训练</h3>
+                    <p class="card-desc">利用 Kohya_ss 针对 Flux 模型进行微调，实现真人或动漫角色的高还原度，支持多场景一致性输出。</p>
                     <div class="tags-group">
-                        <span class="tag">Wan2.2 协作</span>
-                        <span class="tag">AI 音效</span>
-                    </div>
-                </div>
-            </a>
-            <a href="ltx-inpaint.html" class="function-card">
-                <div class="card-bg bg-ltx-inpaint"></div>
-                <div class="card-icon">🖌️</div>
-                <div class="card-content">
-                    <h2 class="card-title">局部重绘</h2>
-                    <p class="card-desc">视频级别的指定区域掩码编辑，支持动态物体的替换、擦除与背景重构，满足精细化修改。</p>
-                    <div class="tags-group">
-                        <span class="tag">视频 Inpaint</span>
-                        <span class="tag">动态编辑</span>
+                        <span class="tag">Flux LoRA</span>
+                        <span class="tag">角色一致性</span>
                     </div>
                 </div>
             </a>
         </div>
-    </div>
+    </section>
 
-    <div class="main-container">
-        <div class="section-header header-audio">音频生成核心板块</div>
+    <!-- 音频生成板块 -->
+    <section class="main-container" aria-labelledby="audio-section-title">
+        <h2 class="section-header header-audio" id="audio-section-title">
+            <span class="section-header__icon" aria-hidden="true">🎵</span>
+            <span>音频生成核心板块</span>
+        </h2>
+
         <div class="cards-grid">
-            <a href="audio-music.html" class="function-card">
-                <div class="card-bg bg-audio-music"></div>
-                <div class="card-icon">🎵</div>
+            <a href="audio-music.html" class="function-card" aria-label="AI音乐创作 - Lyria 3引擎">
+                <div class="card-bg bg-audio-music" loading="lazy" role="img" aria-label="AI音乐示例"></div>
+                <div class="card-icon" aria-hidden="true">🎵</div>
                 <div class="card-content">
-                    <h2 class="card-title">AI 音乐创作</h2>
+                    <h3 class="card-title">AI 音乐创作</h3>
                     <p class="card-desc">基于 Lyria 3 引擎，实现从文本或旋律参考生成高保真音乐，涵盖专业编曲与多语种人声。</p>
                     <div class="tags-group">
                         <span class="tag">Lyria 3</span>
-                        <span class="tag">全流派</span>
                         <span class="tag">自动编曲</span>
                     </div>
                 </div>
             </a>
-            <a href="audio-vocal.html" class="function-card">
-                <div class="card-bg bg-audio-vocal"></div>
-                <div class="card-icon">🎙️</div>
+
+            <a href="audio-vocal.html" class="function-card" aria-label="音色克隆TTS - 情感合成多语言">
+                <div class="card-bg bg-audio-vocal" loading="lazy" role="img" aria-label="音色克隆示例"></div>
+                <div class="card-icon" aria-hidden="true">🎙️</div>
                 <div class="card-content">
-                    <h2 class="card-title">音色克隆/TTS</h2>
+                    <h3 class="card-title">音色克隆/TTS</h3>
                     <p class="card-desc">精准提取人声特征，实现高自然度的语音克隆与情感演绎，适用于有声书与虚拟主播。</p>
                     <div class="tags-group">
-                        <span class="tag"></span>
                         <span class="tag">情感合成</span>
                         <span class="tag">多语言</span>
                     </div>
                 </div>
             </a>
         </div>
-    </div>
+    </section>
 
-    <footer class="footer">
+    <!-- 页脚 -->
+    <footer class="footer" role="contentinfo">
         <p>© 2026 范建斌 | ComfyUI AIGC工程师 个人作品集 | 广州</p>
     </footer>
+
+    <!-- 图片懒加载脚本 -->
+    <script>
+        // 原生懒加载 - 使用 Intersection Observer
+        document.addEventListener('DOMContentLoaded', function() {
+            const lazyImages = document.querySelectorAll('.card-bg[loading="lazy"]');
+
+            if ('IntersectionObserver' in window) {
+                const imageObserver = new IntersectionObserver(function(entries, observer) {
+                    entries.forEach(function(entry) {
+                        if (entry.isIntersecting) {
+                            const img = entry.target;
+                            // 图片已通过 CSS 背景加载，这里只是标记加载完成
+                            img.classList.remove('loading');
+                            observer.unobserve(img);
+                        }
+                    });
+                }, {
+                    rootMargin: '50px 0px',
+                    threshold: 0.1
+                });
+
+                lazyImages.forEach(function(img) {
+                    img.classList.add('loading');
+                    imageObserver.observe(img);
+                });
+            } else {
+                // 回退方案：直接加载
+                lazyImages.forEach(function(img) {
+                    img.classList.remove('loading');
+                });
+            }
+        });
+    </script>
 </body>
 </html>
